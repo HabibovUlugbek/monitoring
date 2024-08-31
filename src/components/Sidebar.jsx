@@ -38,46 +38,46 @@ const navItems = [
     text: "Dashboard",
     icon: <HomeOutlined />,
   },
-  {
-    text: "Client Facing",
-    icon: null,
-  },
-  {
-    text: "Products",
-    icon: <ShoppingCartOutlined />,
-  },
-  {
-    text: "Customers",
-    icon: <Groups2Outlined />,
-  },
-  {
-    text: "Transactions",
-    icon: <ReceiptLongOutlined />,
-  },
-  {
-    text: "Geography",
-    icon: <PublicOutlined />,
-  },
-  {
-    text: "Sales",
-    icon: null,
-  },
-  {
-    text: "Overview",
-    icon: <PointOfSaleOutlined />,
-  },
-  {
-    text: "Daily",
-    icon: <TodayOutlined />,
-  },
-  {
-    text: "Monthly",
-    icon: <CalendarMonthOutlined />,
-  },
-  {
-    text: "Breakdown",
-    icon: <PieChartOutlined />,
-  },
+  // {
+  //   text: "Client Facing",
+  //   icon: null,
+  // },
+  // {
+  //   text: "Products",
+  //   icon: <ShoppingCartOutlined />,
+  // },
+  // {
+  //   text: "Customers",
+  //   icon: <Groups2Outlined />,
+  // },
+  // {
+  //   text: "Transactions",
+  //   icon: <ReceiptLongOutlined />,
+  // },
+  // {
+  //   text: "Geography",
+  //   icon: <PublicOutlined />,
+  // },
+  // {
+  //   text: "Sales",
+  //   icon: null,
+  // },
+  // {
+  //   text: "Overview",
+  //   icon: <PointOfSaleOutlined />,
+  // },
+  // {
+  //   text: "Daily",
+  //   icon: <TodayOutlined />,
+  // },
+  // {
+  //   text: "Monthly",
+  //   icon: <CalendarMonthOutlined />,
+  // },
+  // {
+  //   text: "Breakdown",
+  //   icon: <PieChartOutlined />,
+  // },
   {
     text: "Management",
     icon: null,
@@ -167,8 +167,14 @@ const Sidebar = ({
                             : "transparent",
                         color:
                           active === lcText
-                            ? theme.palette.primary[600]
+                            ? "white"
                             : theme.palette.secondary[100],
+                        "&:hover": {
+                          backgroundColor: theme.palette.secondary[300],
+                          color: "white",
+                          transition:
+                            "background-color 0.3s ease, color 0.3s ease", // Added transition property
+                        },
                       }}
                     >
                       <ListItemIcon
@@ -182,7 +188,7 @@ const Sidebar = ({
                       >
                         {icon}
                       </ListItemIcon>
-                      <ListItemText primary={text} />
+                      <ListItemText>{text}</ListItemText>
                       {active === lcText && (
                         <ChevronRightOutlined sx={{ ml: "auto" }} />
                       )}

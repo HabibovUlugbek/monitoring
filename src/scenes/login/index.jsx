@@ -1,144 +1,100 @@
-import React, { useState } from "react";
-import {
-  Box,
-  Button,
-  TextField,
-  Typography,
-  Container,
-  Paper,
-  Snackbar,
-  Alert,
-} from "@mui/material";
-import { useNavigate } from "react-router-dom";
-// import axios from "axios";
+import React from "react";
+import logo from "assets/logo.png";
 
 const LoginPage = () => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-
-  const navigate = useNavigate();
-
-  const handleLogin = async (event) => {
-    event.preventDefault();
-
-    try {
-      //   const response = await axios.post("https://your-backend-api.com/login", {
-      //     username,
-      //     password,
-      //   });
-
-      if (username === "admin" && password === "admin") {
-        if (username === "admin" && password === "admin") {
-          navigate("/dashboard");
-          console.log("Login successful");
-        }
-        console.log("Login successful");
-      } else {
-        // Handle login failure
-        setError(true);
-        setErrorMessage("Login failed. Please check your credentials.");
-        setUsername("");
-        setPassword("");
-      }
-    } catch (error) {
-      // Handle errors from the request itself
-      setError(true);
-      setErrorMessage("An error occurred. Please try again later.");
-      setUsername("");
-      setPassword("");
-    }
-  };
-
-  const handleClose = () => {
-    setError(false);
-  };
-
   return (
-    <Container maxWidth="xs">
-      <Paper
-        elevation={3}
-        style={{
-          padding: "2rem",
-          marginTop: "4rem",
-          backgroundColor: "#1a1c2c",
-          color: "#ffffff",
-        }}
-      >
-        <Typography
-          variant="h4"
-          align="center"
-          gutterBottom
-          style={{ color: "#e6e8ff" }}
-        >
-          LOAN-VISION
-        </Typography>
-        <Box
-          component="form"
-          sx={{
-            "& > :not(style)": { margin: "0.5rem 0" },
-            display: "flex",
-            flexDirection: "column",
-          }}
-          noValidate
-          autoComplete="off"
-          onSubmit={handleLogin}
-        >
-          <TextField
-            label="Username"
-            variant="filled"
-            InputLabelProps={{ style: { color: "#e6e8ff" } }}
-            InputProps={{ style: { color: "#e6e8ff" }, disableUnderline: true }}
-            fullWidth
-            required
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            sx={{
-              backgroundColor: "#2a2e4e",
-              borderRadius: "4px",
-            }}
-          />
-          <TextField
-            label="Password"
-            variant="filled"
+    <div style={styles.container}>
+      <div style={styles.leftSide}>
+        <span>
+          <img alt="ferferoo" src={logo} />
+        </span>
+        <h2 style={styles.heading}>National Bank of Uzbekistan</h2>
+        <h2>Monitoring App</h2>
+      </div>
+      <div style={styles.rightSide}>
+        <div style={styles.loginBox}>
+          <h2 style={styles.loginHeading}>Welcome</h2>
+          <input type="text" placeholder="Username" style={styles.inputField} />
+          <input
             type="password"
-            InputLabelProps={{ style: { color: "#e6e8ff" } }}
-            InputProps={{ style: { color: "#e6e8ff" }, disableUnderline: true }}
-            fullWidth
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            sx={{
-              backgroundColor: "#2a2e4e",
-              borderRadius: "4px",
-            }}
+            placeholder="Password"
+            style={styles.inputField}
           />
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            sx={{
-              marginTop: "1rem",
-              backgroundColor: "#ffcc00",
-              color: "#000",
-              "&:hover": {
-                backgroundColor: "#e6b800",
-              },
-            }}
-          >
-            Login
-          </Button>
-        </Box>
-      </Paper>
-
-      <Snackbar open={error} autoHideDuration={6000} onClose={handleClose}>
-        <Alert onClose={handleClose} severity="error" sx={{ width: "100%" }}>
-          {errorMessage}
-        </Alert>
-      </Snackbar>
-    </Container>
+          <button style={styles.loginButton}>Login</button>
+        </div>
+      </div>
+    </div>
   );
+};
+
+const styles = {
+  container: {
+    display: "flex",
+    height: "100vh",
+    width: "100vw",
+    fontFamily: "Roboto, sans-serif",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#f0f0f0",
+  },
+  leftSide: {
+    flex: 1,
+    backgroundColor: "#003366",
+    color: "white",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    flexDirection: "column",
+    padding: "20px",
+    height: "100%",
+  },
+  heading: {
+    marginBottom: "10px",
+  },
+  paragraph: {
+    textAlign: "center",
+  },
+  rightSide: {
+    flex: 1,
+    backgroundColor: "#ffffff",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    height: "100%",
+  },
+  loginBox: {
+    width: "100%",
+    maxWidth: "300px",
+    backgroundColor: "#f9f9f9",
+    padding: "30px",
+    borderRadius: "12px",
+    boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)",
+  },
+  loginHeading: {
+    marginBottom: "20px",
+    fontSize: "22px",
+    color: "#333",
+    textAlign: "center",
+  },
+  inputField: {
+    width: "100%",
+    padding: "12px",
+    margin: "10px 0",
+    border: "1px solid #ccc",
+    borderRadius: "5px",
+    boxSizing: "border-box",
+    color: "#007aff",
+  },
+  loginButton: {
+    width: "100%",
+    padding: "12px",
+    backgroundColor: "#003366",
+    border: "none",
+    borderRadius: "5px",
+    color: "white",
+    fontSize: "16px",
+    cursor: "pointer",
+  },
 };
 
 export default LoginPage;
