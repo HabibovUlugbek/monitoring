@@ -1,6 +1,6 @@
 import { CssBaseline, ThemeProvider } from "@mui/material";
 import { createTheme } from "@mui/material/styles";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { themeSettings } from "theme";
@@ -19,6 +19,22 @@ import Performance from "scenes/performance";
 import LoginPage from "scenes/login";
 
 function App() {
+  useEffect(() => {
+    const handleStorageChange = (event) => {
+      const updated = localStorage.getItem("roleUpdated");
+      if (updated === "true") {
+        localStorage.setItem("roleUpdated", false);
+        window.location.href = "/login";
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []);
+
   const mode = useSelector((state) => state.global.mode);
   const theme = useMemo(() => createTheme(themeSettings(mode)), [mode]);
   return (

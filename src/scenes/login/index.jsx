@@ -1,7 +1,25 @@
-import React from "react";
+import React, { useState } from "react";
 import logo from "assets/logo.png";
+import { useNavigate } from "react-router-dom";
 
 const LoginPage = () => {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+
+  const handleLogin = () => {
+    if (username === "admin" && password === "password") {
+      localStorage.setItem("roleUpdated", true);
+      navigate("/dashboard");
+    } else if (username === "region" && password === "region") {
+      localStorage.setItem("roleUpdated", true);
+      navigate("/dashboard");
+    } else {
+      setError("Invalid username or password");
+    }
+  };
+
   return (
     <div style={styles.container}>
       <div style={styles.leftSide}>
@@ -14,13 +32,24 @@ const LoginPage = () => {
       <div style={styles.rightSide}>
         <div style={styles.loginBox}>
           <h2 style={styles.loginHeading}>Welcome</h2>
-          <input type="text" placeholder="Username" style={styles.inputField} />
+          <input
+            type="text"
+            placeholder="Username"
+            style={styles.inputField}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
           <input
             type="password"
             placeholder="Password"
             style={styles.inputField}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
           />
-          <button style={styles.loginButton}>Login</button>
+          {error && <p style={styles.errorText}>{error}</p>}
+          <button style={styles.loginButton} onClick={handleLogin}>
+            Login
+          </button>
         </div>
       </div>
     </div>
@@ -50,9 +79,6 @@ const styles = {
   },
   heading: {
     marginBottom: "10px",
-  },
-  paragraph: {
-    textAlign: "center",
   },
   rightSide: {
     flex: 1,
@@ -94,6 +120,11 @@ const styles = {
     color: "white",
     fontSize: "16px",
     cursor: "pointer",
+  },
+  errorText: {
+    color: "red",
+    textAlign: "center",
+    marginBottom: "10px",
   },
 };
 
