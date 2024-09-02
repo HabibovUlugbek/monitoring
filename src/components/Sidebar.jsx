@@ -32,65 +32,7 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import FlexBetween from "./FlexBetween";
 import profileImage from "assets/profile.jpeg";
-
-const navItems = [
-  {
-    text: "Dashboard",
-    icon: <HomeOutlined />,
-  },
-  // {
-  //   text: "Client Facing",
-  //   icon: null,
-  // },
-  // {
-  //   text: "Products",
-  //   icon: <ShoppingCartOutlined />,
-  // },
-  // {
-  //   text: "Customers",
-  //   icon: <Groups2Outlined />,
-  // },
-  // {
-  //   text: "Transactions",
-  //   icon: <ReceiptLongOutlined />,
-  // },
-  // {
-  //   text: "Geography",
-  //   icon: <PublicOutlined />,
-  // },
-  // {
-  //   text: "Sales",
-  //   icon: null,
-  // },
-  // {
-  //   text: "Overview",
-  //   icon: <PointOfSaleOutlined />,
-  // },
-  // {
-  //   text: "Daily",
-  //   icon: <TodayOutlined />,
-  // },
-  // {
-  //   text: "Monthly",
-  //   icon: <CalendarMonthOutlined />,
-  // },
-  // {
-  //   text: "Breakdown",
-  //   icon: <PieChartOutlined />,
-  // },
-  {
-    text: "Management",
-    icon: null,
-  },
-  {
-    text: "Admin",
-    icon: <AdminPanelSettingsOutlined />,
-  },
-  {
-    text: "Performance",
-    icon: <TrendingUpOutlined />,
-  },
-];
+import { RoleEnum, StorageItemNameEnum } from "constants.js";
 
 const Sidebar = ({
   user,
@@ -99,6 +41,68 @@ const Sidebar = ({
   setIsSidebarOpen,
   isNonMobile,
 }) => {
+  const [userInfo, setUserInfo] = useState({});
+
+  const navItems = [
+    {
+      text: "Dashboard",
+      icon: <HomeOutlined />,
+    },
+    // {
+    //   text: "Client Facing",
+    //   icon: null,
+    // },
+    // {
+    //   text: "Products",
+    //   icon: <ShoppingCartOutlined />,
+    // },
+    // {
+    //   text: "Customers",
+    //   icon: <Groups2Outlined />,
+    // },
+    // {
+    //   text: "Transactions",
+    //   icon: <ReceiptLongOutlined />,
+    // },
+    // {
+    //   text: "Geography",
+    //   icon: <PublicOutlined />,
+    // },
+    // {
+    //   text: "Sales",
+    //   icon: null,
+    // },
+    // {
+    //   text: "Overview",
+    //   icon: <PointOfSaleOutlined />,
+    // },
+    // {
+    //   text: "Daily",
+    //   icon: <TodayOutlined />,
+    // },
+    // {
+    //   text: "Monthly",
+    //   icon: <CalendarMonthOutlined />,
+    // },
+    // {
+    //   text: "Breakdown",
+    //   icon: <PieChartOutlined />,
+    // },
+    {
+      text: "Management",
+      icon: null,
+    },
+    {
+      text: "Admin",
+      show: userInfo.role === RoleEnum.ADMIN,
+      icon: <AdminPanelSettingsOutlined />,
+    },
+    {
+      text: "Loans",
+      icon: <TrendingUpOutlined />,
+    },
+  ];
+
   const { pathname } = useLocation();
   const [active, setActive] = useState("");
   const navigate = useNavigate();
@@ -107,6 +111,15 @@ const Sidebar = ({
   useEffect(() => {
     setActive(pathname.substring(1));
   }, [pathname]);
+
+  useEffect(() => {
+    const storedUserInfo = JSON.parse(
+      localStorage.getItem(StorageItemNameEnum.USER_INFO)
+    );
+    if (storedUserInfo) {
+      setUserInfo(storedUserInfo);
+    }
+  }, []);
 
   return (
     <Box component="nav">

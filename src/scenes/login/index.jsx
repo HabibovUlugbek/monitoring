@@ -1,19 +1,68 @@
-import React, { useState } from "react";
-import logo from "assets/logo.png";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { RoleEnum, StorageItemNameEnum } from "constants.js";
+import logo from "assets/logo.png";
 
 const LoginPage = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [users, setUsers] = useState([]);
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const storedUsers = localStorage.getItem("users");
+    if (storedUsers) {
+      setUsers(JSON.parse(storedUsers));
+    }
+  }, []);
+
+  function userExist(username, password) {
+    const user = users.find(
+      (user) => user.username === username && user.password === password
+    );
+
+    return user;
+  }
+
   const handleLogin = () => {
-    if (username === "admin" && password === "password") {
-      localStorage.setItem("roleUpdated", true);
+    const newUser = userExist(username, password);
+
+    if (newUser) {
+      localStorage.setItem(
+        StorageItemNameEnum.USER_INFO,
+        JSON.stringify(newUser)
+      );
+      localStorage.setItem(StorageItemNameEnum.ROLE_UPDATED, true);
       navigate("/dashboard");
-    } else if (username === "region" && password === "region") {
-      localStorage.setItem("roleUpdated", true);
+    } else if (username === "admin" && password === "password") {
+      const withoutAdmin = users.filter((user) => user.iabsId !== 1);
+      localStorage.setItem(
+        StorageItemNameEnum.USER_INFO,
+        JSON.stringify({
+          iabsId: 1,
+          name: "Admin",
+          username: "admin",
+          password: "password",
+          region: null,
+          role: RoleEnum.ADMIN,
+        })
+      );
+      localStorage.setItem(
+        StorageItemNameEnum.USERS,
+        JSON.stringify([
+          ...withoutAdmin,
+          {
+            iabsId: 1,
+            name: "Admin",
+            username: "admin",
+            password: "password",
+            region: null,
+            role: RoleEnum.ADMIN,
+          },
+        ])
+      );
+      localStorage.setItem(StorageItemNameEnum.ROLE_UPDATED, true);
       navigate("/dashboard");
     } else {
       setError("Invalid username or password");

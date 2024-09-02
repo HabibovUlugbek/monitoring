@@ -16,109 +16,169 @@ import {
 import { DataGrid } from "@mui/x-data-grid";
 import Header from "components/Header";
 import CustomColumnMenu from "components/DataGridCustomColumnMenu";
-
-const defaultAdmins = {
-  iabsId: 1,
-  name: "John",
-  region: "Andijon",
-  role: "Admin",
-};
-
-const regions = [
-  {
-    id: 1,
-    name: "Andijon",
-  },
-  {
-    id: 2,
-    name: "Tashkent",
-  },
-  {
-    id: 3,
-    name: "Samarkand",
-  },
-  {
-    id: 4,
-    name: "Namangan",
-  },
-  {
-    id: 5,
-    name: "Buxoro",
-  },
-  {
-    id: 6,
-    name: "Qoraqalpog`iston respublikasi",
-  },
-  {
-    id: 7,
-    name: "Fergana",
-  },
-  {
-    id: 8,
-    name: "Sirdaryo",
-  },
-  {
-    id: 9,
-    name: "Jizzax",
-  },
-  {
-    id: 10,
-    name: "Surxondaryo",
-  },
-  {
-    id: 11,
-    name: "Navoiy",
-  },
-  {
-    id: 12,
-    name: "Xorazm",
-  },
-  {
-    id: 13,
-    name: "Qashqadaryo",
-  },
-  {
-    id: 14,
-    name: "Toshkent viloyati",
-  },
-];
-
-const columns = [
-  { field: "iabsId", headerName: "iabs ID", flex: 0.5 },
-  { field: "name", headerName: "Name", flex: 0.5 },
-  { field: "region", headerName: "Region", flex: 0.4 },
-  { field: "role", headerName: "Role", flex: 0.5 },
-];
+import { RoleEnum, regions, StorageItemNameEnum } from "constants.js";
 
 const Admin = () => {
+  const columns = [
+    { field: "iabsId", headerName: "iabs ID", flex: 0.5 },
+    { field: "name", headerName: "Name", flex: 0.5 },
+    {
+      field: "region",
+      headerName: "Region",
+      flex: 0.4,
+      valueGetter: (params) => {
+        const region = regions.find((r) => r.id === params.value);
+        return region ? region.name : "Not defined";
+      },
+    },
+    {
+      field: "role",
+      headerName: "Role",
+      flex: 0.5,
+      // valueGetter: (params) => RoleEnum[params.value] || "Not defined",
+    },
+    {
+      field: "control",
+      headerName: "Control",
+      flex: 0.5,
+      renderCell: (params) => (
+        <Box>
+          <Button
+            variant="contained"
+            sx={{
+              backgroundColor: "#003366",
+              color: "white",
+              "&:hover": {
+                backgroundColor: "#002244",
+              },
+              marginRight: "8px", // Adding space between buttons
+            }}
+            onClick={() => handleEdit(params.row)}
+          >
+            Edit
+          </Button>
+          <Button
+            variant="outlined"
+            color="error"
+            onClick={() => handleDelete(params.row.iabsId)}
+          >
+            Delete
+          </Button>
+        </Box>
+      ),
+    },
+  ];
+
   const theme = useTheme();
+  const [userInfo, setUserInfo] = useState({});
   const [open, setOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
   const [newAdmin, setNewAdmin] = useState({
     iabsId: "",
     name: "",
-    region: "",
+    username: "",
+    password: "",
     role: "",
+    region: "",
   });
 
-  const [admins, setAdmins] = useState([defaultAdmins]);
+  const [admins, setAdmins] = useState([]);
 
   useEffect(() => {
+    const storedUserInfo = JSON.parse(
+      localStorage.getItem(StorageItemNameEnum.USER_INFO)
+    );
+    if (storedUserInfo) {
+      setUserInfo(storedUserInfo);
+    }
+
+    const storedAdmins = JSON.parse(
+      localStorage.getItem(StorageItemNameEnum.USERS)
+    );
+    if (storedAdmins) {
+      const me = JSON.parse(
+        localStorage.getItem(StorageItemNameEnum.USER_INFO)
+      );
+      if (storedUserInfo.role === RoleEnum.ADMIN) {
+        const withoutMe = storedAdmins.filter(
+          (user) => user.iabsId !== me?.iabsId
+        );
+        setAdmins(withoutMe);
+      } else if (storedUserInfo.role === RoleEnum.REPUBLIC_EMPLOYEE) {
+        const admins = storedAdmins.filter(
+          (user) => user.region === storedUserInfo.region
+        );
+        const withoutMe = admins.filter((user) => user.iabsId !== me?.iabsId);
+        setAdmins(withoutMe);
+      } else if (storedUserInfo.role === RoleEnum.REGION_BOSS) {
+        const admins = storedAdmins.filter(
+          (user) =>
+            user.region === storedUserInfo.region &&
+            user.role === RoleEnum.REGION_EMPLOYEE
+        );
+        const withoutMe = admins.filter((user) => user.iabsId !== me?.iabsId);
+        setAdmins(withoutMe);
+      } else if (storedUserInfo.role === RoleEnum.REGION_EMPLOYEE) {
+        setAdmins([me]);
+      }
+    }
+  }, []);
+
+  const handleOpen = () => {
+    setOpen(true);
+    setEditMode(false);
     setNewAdmin({
       iabsId: "",
       name: "",
-      region: "",
+      username: "",
+      password: "",
       role: "",
+      region: "",
     });
-  }, [admins]);
+  };
 
-  const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
+
   const handleChange = (e) =>
     setNewAdmin({ ...newAdmin, [e.target.name]: e.target.value });
+
   const handleSave = () => {
-    console.log("New Admin Details:", newAdmin);
-    setAdmins([...admins, { ...newAdmin }]);
+    if (editMode) {
+      setAdmins((prevAdmins) =>
+        prevAdmins.map((admin) => {
+          return admin.iabsId === newAdmin.iabsId ? newAdmin : admin;
+        })
+      );
+      const updatedAdmins = admins.map((admin) => {
+        return admin.iabsId === newAdmin.iabsId ? newAdmin : admin;
+      });
+      localStorage.setItem(
+        StorageItemNameEnum.USERS,
+        JSON.stringify([...updatedAdmins, userInfo])
+      );
+    } else {
+      setAdmins([...admins, newAdmin]);
+      localStorage.setItem(
+        StorageItemNameEnum.USERS,
+        JSON.stringify([...admins, newAdmin, userInfo])
+      );
+    }
     handleClose();
+  };
+
+  const handleEdit = (admin) => {
+    setEditMode(true);
+    setNewAdmin(admin);
+    setOpen(true);
+  };
+
+  const handleDelete = (iabsId) => {
+    const updatedAdmins = admins.filter((admin) => admin.iabsId !== iabsId);
+    setAdmins(updatedAdmins);
+    localStorage.setItem(
+      StorageItemNameEnum.USERS,
+      JSON.stringify([...updatedAdmins, userInfo])
+    );
   };
 
   return (
@@ -179,7 +239,7 @@ const Admin = () => {
 
       <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ backgroundColor: "white", color: "#003366" }}>
-          Add New User
+          {editMode ? "Edit Admin" : "Add New Admin"}
         </DialogTitle>
         <DialogContent sx={{ backgroundColor: "white", color: "#003366" }}>
           <TextField
@@ -196,7 +256,9 @@ const Admin = () => {
             }}
             InputProps={{
               style: { color: "#003366" },
+              readOnly: editMode, // Make iabsId read-only in edit mode
             }}
+            // disabled={editMode}
           />
           <TextField
             margin="dense"
@@ -213,22 +275,36 @@ const Admin = () => {
               style: { color: "#003366" },
             }}
           />
-          <FormControl fullWidth margin="dense">
-            <InputLabel sx={{ color: "#003366" }}>Region</InputLabel>
-            <Select
-              name="region"
-              value={newAdmin.region}
-              onChange={handleChange}
-              displayEmpty
-              sx={{ color: "#003366" }}
-            >
-              <MenuItem value="Andijon">Andijon</MenuItem>
-              <MenuItem value="Tashkent">Tashkent</MenuItem>
-              <MenuItem value="Samarkand">Samarkand</MenuItem>
-
-              {/* Add more regions as needed */}
-            </Select>
-          </FormControl>
+          <TextField
+            margin="dense"
+            name="username"
+            label="Username"
+            type="text"
+            fullWidth
+            value={newAdmin.username}
+            onChange={handleChange}
+            InputLabelProps={{
+              style: { color: "#003366" },
+            }}
+            InputProps={{
+              style: { color: "#003366" },
+            }}
+          />
+          <TextField
+            margin="dense"
+            name="password"
+            label="Password"
+            type="text"
+            fullWidth
+            value={newAdmin.password}
+            onChange={handleChange}
+            InputLabelProps={{
+              style: { color: "#003366" },
+            }}
+            InputProps={{
+              style: { color: "#003366" },
+            }}
+          />
           <FormControl fullWidth margin="dense">
             <InputLabel sx={{ color: "#003366" }}>Role</InputLabel>
             <Select
@@ -238,12 +314,27 @@ const Admin = () => {
               displayEmpty
               sx={{ color: "#003366" }}
             >
-              <MenuItem value="Admin">Admin</MenuItem>
-              <MenuItem value="Viloyat boshqarma boshlig`i">
-                Viloyat boshqarma boshlig`i
-              </MenuItem>
-              <MenuItem value="Respublika xodimi"> Respublika xodimi</MenuItem>
-              <MenuItem value="Viloyat xodimi"> Viloyat xodimi</MenuItem>
+              {Object.entries(RoleEnum).map(([key, value]) => (
+                <MenuItem key={key} value={value}>
+                  {value}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl fullWidth margin="dense">
+            <InputLabel sx={{ color: "#003366" }}>Region</InputLabel>
+            <Select
+              name="region"
+              value={newAdmin.region}
+              onChange={handleChange}
+              displayEmpty
+              sx={{ color: "#003366" }}
+            >
+              {regions.map((region) => (
+                <MenuItem key={region.id} value={region.id}>
+                  {region.name}
+                </MenuItem>
+              ))}
             </Select>
           </FormControl>
         </DialogContent>

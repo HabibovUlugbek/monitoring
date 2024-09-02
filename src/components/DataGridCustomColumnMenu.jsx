@@ -6,7 +6,6 @@ import {
 
 const CustomColumnMenu = (props) => {
   const { hideMenu, currentColumn, open } = props;
-  console.log(hideMenu, currentColumn, open);
   return (
     <GridColumnMenuContainer
       hideMenu={hideMenu}
