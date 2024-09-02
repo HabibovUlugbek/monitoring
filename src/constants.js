@@ -5,12 +5,25 @@ const RoleEnum = {
   REGION_EMPLOYEE: "Viloyat xodimi",
 };
 
+const LoanStatusEnum = {
+  PENDING: "Pending",
+  MAQSADLI: "Maqsadli",
+  MAQSADSIZ: "Maqsadsiz",
+  QISMAN_MAQSADLI: "Qisman Maqsadli",
+  QISMAN_MAQSADSIZ: "Qisman Maqsadsiz",
+  CANCELLED: "Cencelled",
+  SUCCESS: "Success",
+  OUTDATED: "Outdated",
+};
+
 const StorageItemNameEnum = {
   ROLE_UPDATED: "roleUpdated",
   USER_INFO: "userInfo",
   USERS: "users",
   LOANS: "loans",
+  LOAN_FILES: "loanFiles",
 };
+
 const regions = [
   {
     id: "03",
@@ -70,4 +83,4 @@ const regions = [
   },
 ];
 
-module.exports = { RoleEnum, StorageItemNameEnum, regions };
+module.exports = { RoleEnum, StorageItemNameEnum, regions, LoanStatusEnum };

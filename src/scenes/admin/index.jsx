@@ -19,6 +19,21 @@ import CustomColumnMenu from "components/DataGridCustomColumnMenu";
 import { RoleEnum, regions, StorageItemNameEnum } from "constants.js";
 
 const Admin = () => {
+  const theme = useTheme();
+  const [userInfo, setUserInfo] = useState({});
+  const [open, setOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [newAdmin, setNewAdmin] = useState({
+    iabsId: "",
+    name: "",
+    username: "",
+    password: "",
+    role: "",
+    region: "",
+  });
+
+  const [admins, setAdmins] = useState([]);
+
   const columns = [
     { field: "iabsId", headerName: "iabs ID", flex: 0.5 },
     { field: "name", headerName: "Name", flex: 0.5 },
@@ -41,48 +56,39 @@ const Admin = () => {
       field: "control",
       headerName: "Control",
       flex: 0.5,
-      renderCell: (params) => (
-        <Box>
-          <Button
-            variant="contained"
-            sx={{
-              backgroundColor: "#003366",
-              color: "white",
-              "&:hover": {
-                backgroundColor: "#002244",
-              },
-              marginRight: "8px", // Adding space between buttons
-            }}
-            onClick={() => handleEdit(params.row)}
-          >
-            Edit
-          </Button>
-          <Button
-            variant="outlined"
-            color="error"
-            onClick={() => handleDelete(params.row.iabsId)}
-          >
-            Delete
-          </Button>
-        </Box>
-      ),
+      renderCell: (params) => {
+        if (userInfo.role !== RoleEnum.ADMIN) {
+          return "You don't have access";
+        } else {
+          return (
+            <Box>
+              <Button
+                variant="contained"
+                sx={{
+                  backgroundColor: "#003366",
+                  color: "white",
+                  "&:hover": {
+                    backgroundColor: "#002244",
+                  },
+                  marginRight: "8px", // Adding space between buttons
+                }}
+                onClick={() => handleEdit(params.row)}
+              >
+                Edit
+              </Button>
+              <Button
+                variant="outlined"
+                color="error"
+                onClick={() => handleDelete(params.row.iabsId)}
+              >
+                Delete
+              </Button>
+            </Box>
+          );
+        }
+      },
     },
   ];
-
-  const theme = useTheme();
-  const [userInfo, setUserInfo] = useState({});
-  const [open, setOpen] = useState(false);
-  const [editMode, setEditMode] = useState(false);
-  const [newAdmin, setNewAdmin] = useState({
-    iabsId: "",
-    name: "",
-    username: "",
-    password: "",
-    role: "",
-    region: "",
-  });
-
-  const [admins, setAdmins] = useState([]);
 
   useEffect(() => {
     const storedUserInfo = JSON.parse(
