@@ -20,6 +20,7 @@ import BreakdownChart from "components/BreakdownChart";
 import OverviewChart from "components/OverviewChart";
 import { useGetDashboardQuery } from "state/api";
 import StatBox from "components/StatBox";
+import LoanBarChart from "components/LoanBarChart";
 
 const Dashboard = () => {
   const theme = useTheme();
@@ -173,12 +174,7 @@ const Dashboard = () => {
             },
           }}
         >
-          <DataGrid
-            loading={isLoading || !data}
-            getRowId={(row) => row._id}
-            rows={(data && data.transactions) || []}
-            columns={columns}
-          />
+          <LoanBarChart />
         </Box>
         <Box
           gridColumn="span 4"
