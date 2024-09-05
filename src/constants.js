@@ -11,7 +11,7 @@ const LoanStatusEnum = {
   MAQSADSIZ: "Maqsadsiz",
   QISMAN_MAQSADLI: "Qisman Maqsadli",
   QISMAN_MAQSADSIZ: "Qisman Maqsadsiz",
-  CANCELLED: "Cencelled",
+  CANCELLED: "Cancelled",
   SUCCESS: "Success",
   OUTDATED: "Outdated",
 };

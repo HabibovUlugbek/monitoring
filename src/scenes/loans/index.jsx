@@ -126,26 +126,6 @@ const Loans = () => {
       );
       setLoans(updatedLoans);
 
-      const storedFiles = JSON.parse(
-        localStorage.getItem(StorageItemNameEnum.LOAN_FILES) || "[]"
-      );
-      storedFiles.push({ loanId: selectedLoanId, data: fileData });
-
-      const storedLoanFiles = localStorage.getItem(
-        StorageItemNameEnum.LOAN_FILES
-      );
-
-      if (storedLoanFiles) {
-        const updatedLoanFiles = JSON.parse(storedLoanFiles).map(
-          (files) => files.loanId === selectedLoanId
-        );
-
-        localStorage.setItem(
-          StorageItemNameEnum.LOAN_FILES,
-          JSON.stringify(updatedLoanFiles)
-        );
-      }
-
       const storedLoans = localStorage.getItem(StorageItemNameEnum.LOANS);
       if (storedLoans) {
         const updatedStoredLoans = JSON.parse(storedLoans).map((loan) =>
@@ -159,6 +139,20 @@ const Loans = () => {
           JSON.stringify(updatedStoredLoans)
         );
       }
+
+      const storedFiles = JSON.parse(
+        localStorage.getItem(StorageItemNameEnum.LOAN_FILES) || "[]"
+      );
+
+      if (storedFiles) {
+        storedFiles.map((file) => (file.loanId === selectedLoanId ? {} : file));
+        storedFiles.push({ loanId: selectedLoanId, data: fileData });
+      }
+
+      localStorage.setItem(
+        StorageItemNameEnum.LOAN_FILES,
+        JSON.stringify(storedFiles)
+      );
 
       handleUploadClose();
     } else {
@@ -345,7 +339,10 @@ const Loans = () => {
             return "Already finished";
           }
         } else if (userInfo.role === RoleEnum.REGION_BOSS) {
-          if (params.row.responsible === userInfo.iabsId) {
+          if (
+            params.row.responsible === userInfo.iabsId &&
+            params.row.status === LoanStatusEnum.PENDING
+          ) {
             return (
               <Button
                 variant="contained"
@@ -462,28 +459,54 @@ const Loans = () => {
         mt="40px"
         height="75vh"
         sx={{
+          "& .MuiButton-contained:hover": {
+            color: "white",
+          },
           "& .MuiDataGrid-root": {
             border: "none",
           },
           "& .MuiDataGrid-cell": {
             color: theme.palette.secondary[100],
-            borderBottom: "none",
           },
           "& .MuiDataGrid-columnHeaders": {
             backgroundColor: theme.palette.background.alt,
-            color: theme.palette.secondary[100],
-            borderBottom: "none",
+            color: "#003366",
+          },
+          "& .MuiDataGrid-columnHeaderTitle": {
+            fontWeight: "bold", // Bold header text
           },
           "& .MuiDataGrid-virtualScroller": {
             backgroundColor: theme.palette.primary.light,
           },
+          "& .MuiDataGrid-columnHeader:focus, & .MuiDataGrid-columnHeader:focus-within":
+            {
+              outline: "none",
+            },
+          "& .MuiDataGrid-sortIcon": {
+            color: "#003366", // Sorting arrow color
+          },
+          "& .MuiDataGrid-menuIconButton": {
+            color: "#003366", // Color for 3-dot menu icon in column headers
+          },
+          "& .MuiTablePagination-actions .MuiIconButton-root": {
+            color: "#003366", // Change color of pagination icons
+          },
           "& .MuiDataGrid-footerContainer": {
             backgroundColor: theme.palette.background.alt,
-            color: theme.palette.secondary[100],
+            color: "#003366",
             borderTop: "none",
           },
+          "& .MuiSelect-icon": {
+            color: "#003366", // Color of dropdown icon for changing page number
+          },
+          "& .MuiTablePagination-root": {
+            color: "#003366", // Footer pagination text color
+          },
+          "& .MuiDataGrid-footerContainer .MuiTablePagination-rootContainer": {
+            color: theme.palette.secondary[100],
+          },
           "& .MuiDataGrid-toolbarContainer .MuiButton-text": {
-            color: `${theme.palette.secondary[200]} !important`,
+            color: theme.palette.secondary[100] + " !important",
           },
         }}
       >

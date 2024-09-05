@@ -44,18 +44,32 @@ const Navbar = ({ user, isSidebarOpen, setIsSidebarOpen }) => {
       <Toolbar sx={{ justifyContent: "space-between" }}>
         {/* LEFT SIDE */}
         <FlexBetween>
+          {/* Menu Icon Button */}
           <IconButton onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
-            <MenuIcon />
+            <MenuIcon style={{ color: "#003366" }} />{" "}
+            {/* Change MenuIcon color */}
           </IconButton>
+
+          {/* Search Bar and Button */}
           <FlexBetween
-            backgroundColor={theme.palette.background.alt}
+            backgroundColor={theme.palette.background.alt} // Keep the background as per your theme
             borderRadius="9px"
             gap="3rem"
             p="0.1rem 1.5rem"
           >
-            <InputBase placeholder="Search..." />
+            {/* InputBase styling */}
+            <InputBase
+              placeholder="Search..."
+              sx={{
+                color: "#003366", // Text color for the search input
+                "::placeholder": { color: "#003366" }, // Placeholder text color
+              }}
+            />
+
+            {/* Search Icon Button */}
             <IconButton>
-              <Search />
+              <Search style={{ color: "#003366" }} />{" "}
+              {/* Change Search icon color */}
             </IconButton>
           </FlexBetween>
         </FlexBetween>
