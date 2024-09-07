@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import FlexBetween from "components/FlexBetween";
 import Header from "components/Header";
 import {
@@ -21,11 +21,11 @@ import OverviewChart from "components/OverviewChart";
 import { useGetDashboardQuery } from "state/api";
 import StatBox from "components/StatBox";
 import LoanBarChart from "components/LoanBarChart";
+import { StorageItemNameEnum, LoanStatusEnum } from "constants.js";
 
 const Dashboard = () => {
   const theme = useTheme();
   const isNonMediumScreens = useMediaQuery("(min-width: 1200px)");
-  const { data, isLoading } = useGetDashboardQuery();
 
   const columns = [
     {
@@ -57,6 +57,28 @@ const Dashboard = () => {
       renderCell: (params) => `$${Number(params.value).toFixed(2)}`,
     },
   ];
+
+  const [loansCount, setLoansCount] = useState(0);
+  const [checkedCount, setCheckedCount] = useState(0);
+  const [checkedByRepublicCount, setCheckedByRepublicCount] = useState(0);
+  useEffect(() => {
+    const data = JSON.parse(localStorage.getItem(StorageItemNameEnum.LOANS));
+    if (data) {
+      setLoansCount(data.length);
+      data.forEach((loan) => {
+        if (
+          [
+            LoanStatusEnum.MAQSADLI,
+            LoanStatusEnum.MAQSADSIZ,
+            LoanStatusEnum.QISMAN_MAQSADLI,
+            LoanStatusEnum.QISMAN_MAQSADSIZ,
+          ].includes(loan.status)
+        ) {
+          setCheckedCount((prev) => prev + 1);
+        }
+      });
+    }
+  }, []);
 
   return (
     <Box m="1.5rem 2.5rem">
@@ -91,8 +113,8 @@ const Dashboard = () => {
       >
         {/* ROW 1 */}
         <StatBox
-          title="Total Customers"
-          value={data && data.totalCustomers}
+          title="Total Loans"
+          value={loansCount}
           increase="+14%"
           description="Since last month"
           icon={
@@ -102,8 +124,8 @@ const Dashboard = () => {
           }
         />
         <StatBox
-          title="Sales Today"
-          value={data && data.todayStats.totalSales}
+          title="O`rganildi"
+          value={checkedCount}
           increase="+21%"
           description="Since last month"
           icon={
@@ -122,8 +144,8 @@ const Dashboard = () => {
           <OverviewChart view="sales" isDashboard={true} />
         </Box>
         <StatBox
-          title="Monthly Sales"
-          value={data && data.thisMonthStats.totalSales}
+          title="Ko`rib chiqildi"
+          value={checkedByRepublicCount}
           increase="+5%"
           description="Since last month"
           icon={
@@ -134,7 +156,7 @@ const Dashboard = () => {
         />
         <StatBox
           title="Yearly Sales"
-          value={data && data.yearlySalesTotal}
+          value={1}
           increase="+43%"
           description="Since last month"
           icon={
@@ -146,7 +168,7 @@ const Dashboard = () => {
 
         {/* ROW 2 */}
         <Box
-          gridColumn="span 8"
+          gridColumn="span 12"
           gridRow="span 3"
           sx={{
             "& .MuiDataGrid-root": {
@@ -175,26 +197,6 @@ const Dashboard = () => {
           }}
         >
           <LoanBarChart />
-        </Box>
-        <Box
-          gridColumn="span 4"
-          gridRow="span 3"
-          backgroundColor={theme.palette.background.alt}
-          p="1.5rem"
-          borderRadius="0.55rem"
-        >
-          <Typography variant="h6" sx={{ color: theme.palette.secondary[100] }}>
-            Sales By Category
-          </Typography>
-          <BreakdownChart isDashboard={true} />
-          <Typography
-            p="0 0.6rem"
-            fontSize="0.8rem"
-            sx={{ color: theme.palette.secondary[200] }}
-          >
-            Breakdown of real states and information via category for revenue
-            made for this year and total sales.
-          </Typography>
         </Box>
       </Box>
     </Box>
