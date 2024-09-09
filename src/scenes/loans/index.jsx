@@ -186,10 +186,18 @@ const Loans = () => {
       loan.loanId === loanId ? { ...loan, status: newStatus } : loan
     );
     setLoans(updatedLoans);
-    localStorage.setItem(
-      StorageItemNameEnum.LOANS,
-      JSON.stringify(updatedLoans)
-    );
+
+    const storedLoans = localStorage.getItem(StorageItemNameEnum.LOANS);
+
+    if (storedLoans) {
+      const updatedLoans = JSON.parse(storedLoans).map((loan) =>
+        loan.loanId === loanId ? { ...loan, status: newStatus } : loan
+      );
+      localStorage.setItem(
+        StorageItemNameEnum.LOANS,
+        JSON.stringify(updatedLoans)
+      );
+    }
   };
 
   const handleCheckOpen = (loanId) => {
@@ -248,6 +256,25 @@ const Loans = () => {
       field: "status",
       headerName: "Status",
       flex: 0.5,
+      valueGetter: (params) => {
+        switch (params.value) {
+          case LoanStatusEnum.PENDING:
+            return "Pending";
+          case LoanStatusEnum.MAQSADLI:
+          case LoanStatusEnum.MAQSADSIZ:
+          case LoanStatusEnum.QISMAN_MAQSADLI:
+          case LoanStatusEnum.QISMAN_MAQSADSIZ:
+            return "Tekshirilmoqda";
+          case LoanStatusEnum.CANCELLED:
+            return "Cancelled";
+          case LoanStatusEnum.SUCCESS:
+            return "Success";
+          case LoanStatusEnum.OUTDATED:
+            return "Outdated";
+          default:
+            return "Unknown";
+        }
+      },
     },
     {
       field: "responsible",
@@ -314,9 +341,9 @@ const Loans = () => {
               params.row.status
             )
           ) {
-            return "Finished";
+            return "Tekshirilgan";
           } else {
-            return "You don't have access";
+            return "Tekshirishga tayyor emas";
           }
         } else if (userInfo.role === RoleEnum.REGION_EMPLOYEE) {
           if (params.row.status === LoanStatusEnum.PENDING) {
@@ -335,8 +362,21 @@ const Loans = () => {
                 Upload
               </Button>
             );
+          } else if (
+            [
+              LoanStatusEnum.MAQSADLI,
+              LoanStatusEnum.MAQSADSIZ,
+              LoanStatusEnum.QISMAN_MAQSADLI,
+              LoanStatusEnum.QISMAN_MAQSADSIZ,
+            ].includes(params.row.status)
+          ) {
+            return "Siz tekshira olmaysiz";
+          } else if (LoanStatusEnum.SUCCESS === params.row.status) {
+            return "Qabul qilindi";
+          } else if (LoanStatusEnum.CANCELLED === params.row.status) {
+            return "Qabul qilinmadi";
           } else {
-            return "Already finished";
+            return "Muddati o'tdi";
           }
         } else if (userInfo.role === RoleEnum.REGION_BOSS) {
           if (
@@ -358,8 +398,33 @@ const Loans = () => {
                 Upload
               </Button>
             );
+          } else if (
+            [
+              LoanStatusEnum.MAQSADLI,
+              LoanStatusEnum.MAQSADSIZ,
+              LoanStatusEnum.QISMAN_MAQSADLI,
+              LoanStatusEnum.QISMAN_MAQSADSIZ,
+            ].includes(params.row.status)
+          ) {
+            return "Siz tekshira olmaysiz";
+          } else if (LoanStatusEnum.SUCCESS === params.row.status) {
+            return "Qabul qilindi";
+          } else if (LoanStatusEnum.CANCELLED === params.row.status) {
+            return "Qabul qilinmadi";
+          } else if (LoanStatusEnum.OUTDATED === params.row.status) {
+            return "Muddati o'tdi";
+          } else if (
+            params.row.status === LoanStatusEnum.PENDING &&
+            !params.row.responsible
+          ) {
+            return "Biriktirilmoqda";
+          } else if (
+            params.row.status === LoanStatusEnum.PENDING &&
+            params.row.responsible
+          ) {
+            return "Biriktirilgan";
           } else {
-            return "You can't upload";
+            return "Siz tekshira olmaysiz";
           }
         } else {
           return "You can't change";

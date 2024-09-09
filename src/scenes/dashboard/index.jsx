@@ -61,6 +61,7 @@ const Dashboard = () => {
   const [loansCount, setLoansCount] = useState(0);
   const [checkedCount, setCheckedCount] = useState(0);
   const [checkedByRepublicCount, setCheckedByRepublicCount] = useState(0);
+  const [outdated, setOutdated] = useState(0);
   useEffect(() => {
     const data = JSON.parse(localStorage.getItem(StorageItemNameEnum.LOANS));
     if (data) {
@@ -75,6 +76,16 @@ const Dashboard = () => {
           ].includes(loan.status)
         ) {
           setCheckedCount((prev) => prev + 1);
+        }
+        if (
+          [LoanStatusEnum.SUCCESS, LoanStatusEnum.CANCELLED].includes(
+            loan.status
+          )
+        ) {
+          setCheckedByRepublicCount((prev) => prev + 1);
+        }
+        if (loan.status === LoanStatusEnum.OUTDATED) {
+          setOutdated((prev) => prev + 1);
         }
       });
     }
@@ -155,9 +166,9 @@ const Dashboard = () => {
           }
         />
         <StatBox
-          title="Yearly Sales"
-          value={1}
-          increase="+43%"
+          title="Muddati o`tgan"
+          value={outdated}
+          increase="-13%"
           description="Since last month"
           icon={
             <Traffic
