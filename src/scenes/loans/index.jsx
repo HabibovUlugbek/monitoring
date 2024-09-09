@@ -257,23 +257,17 @@ const Loans = () => {
       headerName: "Status",
       flex: 0.5,
       valueGetter: (params) => {
-        switch (params.value) {
-          case LoanStatusEnum.PENDING:
-            return "Pending";
-          case LoanStatusEnum.MAQSADLI:
-          case LoanStatusEnum.MAQSADSIZ:
-          case LoanStatusEnum.QISMAN_MAQSADLI:
-          case LoanStatusEnum.QISMAN_MAQSADSIZ:
-            return "Tekshirilmoqda";
-          case LoanStatusEnum.CANCELLED:
-            return "Cancelled";
-          case LoanStatusEnum.SUCCESS:
-            return "Success";
-          case LoanStatusEnum.OUTDATED:
-            return "Outdated";
-          default:
-            return "Unknown";
-        }
+        if (
+          [
+            LoanStatusEnum.MAQSADLI,
+            LoanStatusEnum.MAQSADSIZ,
+            LoanStatusEnum.QISMAN_MAQSADLI,
+            LoanStatusEnum.QISMAN_MAQSADSIZ,
+          ].includes(params.value) &&
+          userInfo.role !== RoleEnum.REPUBLIC_EMPLOYEE
+        ) {
+          return "Tekshirilmoqda";
+        } else return params.value;
       },
     },
     {
