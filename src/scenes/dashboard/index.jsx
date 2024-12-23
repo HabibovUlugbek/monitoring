@@ -8,17 +8,8 @@ import {
   PersonAdd,
   Traffic,
 } from "@mui/icons-material";
-import {
-  Box,
-  Button,
-  Typography,
-  useTheme,
-  useMediaQuery,
-} from "@mui/material";
-import { DataGrid } from "@mui/x-data-grid";
-import BreakdownChart from "components/BreakdownChart";
+import { Box, Button, useTheme, useMediaQuery } from "@mui/material";
 import OverviewChart from "components/OverviewChart";
-import { useGetDashboardQuery } from "state/api";
 import StatBox from "components/StatBox";
 import LoanBarChart from "components/LoanBarChart";
 import { StorageItemNameEnum, LoanStatusEnum } from "constants.js";

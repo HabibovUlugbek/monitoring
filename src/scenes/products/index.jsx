@@ -12,7 +12,6 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import Header from "components/Header";
-import { useGetProductsQuery } from "state/api";
 
 const Product = ({
   _id,
@@ -86,7 +85,7 @@ const Product = ({
 };
 
 const Products = () => {
-  const { data, isLoading } = useGetProductsQuery();
+  const { data, isLoading } = { isLoading: true };
   const isNonMobile = useMediaQuery("(min-width: 1000px)");
 
   return (
