@@ -17,6 +17,7 @@ import Breakdown from "scenes/breakdown";
 import Admin from "scenes/admin";
 import Loans from "scenes/loans";
 import LoginPage from "scenes/login";
+import SuperAdminDashboard from "scenes/super-admin-dashboard";
 
 function App() {
   useEffect(() => {
@@ -45,6 +46,10 @@ function App() {
           <Routes>
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route
+              path="/superadmin-dashboard"
+              element={<SuperAdminDashboard />}
+            />
             <Route element={<Layout />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/products" element={<Products />} />

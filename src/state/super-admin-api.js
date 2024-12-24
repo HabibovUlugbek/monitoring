@@ -1,17 +1,18 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { getCookie, setCookie } from "helper";
 
-const getAccessTokenFromCookie = () => getCookie("accessToken");
-const getRefreshTokenFromCookie = () => getCookie("refreshToken");
+const getAccessTokenFromCookie = () => getCookie("super-accessToken");
+const getRefreshTokenFromCookie = () => getCookie("super-refreshToken");
 
 const handle401Error = async (args, api, extraOptions, baseQuery) => {
   let result = await baseQuery(args, api, extraOptions);
+  console.log(1234, result);
   if (result.error && result.error.status === 401) {
     const refreshToken = getRefreshTokenFromCookie();
     if (refreshToken) {
       const refreshResult = await baseQuery(
         {
-          url: "admin/refresh-token",
+          url: "super-admin/refresh-token",
           method: "POST",
           body: { refreshToken },
         },
@@ -19,7 +20,7 @@ const handle401Error = async (args, api, extraOptions, baseQuery) => {
         extraOptions
       );
       if (refreshResult.data) {
-        setCookie("accessToken", refreshResult.data.accessToken);
+        setCookie("super-accessToken", refreshResult.data.accessToken);
         result = await baseQuery(args, api, extraOptions);
       } else {
         throw new Error("Failed to refresh token");
@@ -34,6 +35,7 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
     baseUrl: "http://localhost:4000/api/v1",
     prepareHeaders: (headers) => {
       const accessToken = getAccessTokenFromCookie();
+      console.log(123, accessToken);
       if (accessToken) {
         headers.set("authorization", `Bearer ${accessToken}`);
       }
@@ -44,57 +46,36 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
   return handle401Error(args, api, extraOptions, baseQuery);
 };
 
-export const api = createApi({
+export const superapi = createApi({
   baseQuery: baseQueryWithReauth,
-  reducerPath: "adminApi",
-  tagTypes: ["Admin"],
+  reducerPath: "superAdminApi",
+  tagTypes: ["SuperAdmin"],
   endpoints: (build) => ({
-    signInAdmin: build.query({
+    signInSuperAdmin: build.query({
       query: (credentials) => ({
-        url: "admin/sign-in",
+        url: "super-admin/sign-in",
         method: "POST",
         body: credentials,
       }),
-      providesTags: ["Admin"],
+      providesTags: ["SuperAdmin"],
     }),
-    refreshTokenAdmin: build.query({
+    refreshTokenSuperAdmin: build.query({
       query: (refreshToken) => ({
-        url: "admin/refresh-token",
+        url: "super-admin/refresh-token",
         method: "POST",
         body: { refreshToken },
       }),
-      providesTags: ["Admin"],
+      providesTags: ["SuperAdmin"],
     }),
-    deleteAdmin: build.mutation({
-      query: (id) => ({
-        url: `admin/${id}`,
-        method: "DELETE",
-      }),
-      invalidatesTags: ["Admin"],
-    }),
-    createAdmin: build.mutation({
-      query: (admin) => ({
-        url: "admin",
-        method: "POST",
-        body: admin,
-      }),
-      invalidatesTags: ["Admin"],
-    }),
-    updateAdmin: build.mutation({
-      query: (admin) => ({
-        url: `admin/${admin.id}`,
-        method: "PATCH",
-        body: admin,
-      }),
-      invalidatesTags: ["Admin"],
+    getAdminsForSuperAdmin: build.query({
+      query: () => "super-admin/admins",
+      providesTags: ["SuperAdmin"],
     }),
   }),
 });
 
 export const {
-  useSignInAdminQuery,
-  useRefreshTokenAdminQuery,
-  useDeleteAdminMutation,
-  useCreateAdminMutation,
-  useUpdateAdminMutation,
-} = api;
+  useSignInSuperAdminQuery,
+  useRefreshTokenSuperAdminQuery,
+  useGetAdminsForSuperAdminQuery,
+} = superapi;

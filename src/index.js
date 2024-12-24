@@ -7,13 +7,16 @@ import globalReducer from "state";
 import { Provider } from "react-redux";
 import { setupListeners } from "@reduxjs/toolkit/query";
 import { api } from "state/api";
+import { superapi } from "./state/super-admin-api";
 
 const store = configureStore({
   reducer: {
     global: globalReducer,
     [api.reducerPath]: api.reducer,
+    [superapi.reducerPath]: superapi.reducer,
   },
-  middleware: (getDefault) => getDefault().concat(api.middleware),
+  middleware: (getDefault) =>
+    getDefault().concat(api.middleware, superapi.middleware),
 });
 setupListeners(store.dispatch);
 

@@ -1,8 +1,10 @@
 const RoleEnum = {
-  ADMIN: "Admin",
-  REPUBLIC_EMPLOYEE: "Respublika xodimi",
-  REGION_BOSS: "Viloyat boshqarma boshlig`i",
-  REGION_EMPLOYEE: "Viloyat xodimi",
+  REPUBLIC_BOSS: "Respublika Rahbari",
+  REPUBLIC_EMPLOYEE: "Respublika Xodimi",
+  REGION_BOSS: "Hudud Rahbari",
+  REGION_EMPLOYEE: "Hudud Xodimi",
+  REGION_CHECKER_BOSS: "Hudud Nazoratchisi Rahbari",
+  REGION_CHECKER_EMPLOYEE: "Hudud Nazoratchisi Xodimi",
 };
 
 const LoanStatusEnum = {

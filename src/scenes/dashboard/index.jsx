@@ -13,10 +13,22 @@ import OverviewChart from "components/OverviewChart";
 import StatBox from "components/StatBox";
 import LoanBarChart from "components/LoanBarChart";
 import { StorageItemNameEnum, LoanStatusEnum } from "constants.js";
+import { getCookie } from "helper";
+import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const theme = useTheme();
   const isNonMediumScreens = useMediaQuery("(min-width: 1200px)");
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    //check cookies
+    const accessToken = getCookie("accessToken");
+    const refreshToken = getCookie("refreshToken");
+    if (!accessToken || !refreshToken) {
+      navigate("/login");
+    }
+  }, [navigate]);
 
   const columns = [
     {

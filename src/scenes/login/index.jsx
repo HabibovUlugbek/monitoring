@@ -1,73 +1,92 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { RoleEnum, StorageItemNameEnum } from "constants.js";
 import logo from "assets/logo.png";
+import { useSignInAdminQuery } from "state/api";
+import { useSignInSuperAdminQuery } from "state/super-admin-api";
+import { getCookie, setCookie } from "helper";
 
 const LoginPage = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [users, setUsers] = useState([]);
   const [error, setError] = useState("");
+  const [showSuperAdmin, setShowSuperAdmin] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [inputValues, setInputValues] = useState({
+    username: "",
+    password: "",
+    isSuperAdmin: false,
+  });
   const navigate = useNavigate();
+  const {
+    data: superAdminData,
+    isSuccess: isSuperAdminSuccess,
+    error: superAdminError,
+  } = useSignInSuperAdminQuery({ username, password }, { skip: !isSuperAdmin });
+  const {
+    data: adminData,
+    isSuccess: isAdminSuccess,
+    error: adminError,
+  } = useSignInAdminQuery({ username, password }, { skip: isSuperAdmin });
 
   useEffect(() => {
-    const storedUsers = localStorage.getItem("users");
-    if (storedUsers) {
-      setUsers(JSON.parse(storedUsers));
-    }
-  }, []);
+    const accessToken = getCookie("accessToken");
+    const refreshToken = getCookie("refreshToken");
 
-  function userExist(username, password) {
-    const user = users.find(
-      (user) => user.username === username && user.password === password
-    );
-
-    return user;
-  }
-
-  const handleLogin = () => {
-    const newUser = userExist(username, password);
-
-    if (newUser) {
-      localStorage.setItem(
-        StorageItemNameEnum.USER_INFO,
-        JSON.stringify(newUser)
-      );
-      localStorage.setItem(StorageItemNameEnum.ROLE_UPDATED, true);
+    if (accessToken && refreshToken) {
       navigate("/dashboard");
-    } else if (username === "admin" && password === "password") {
-      const withoutAdmin = users.filter((user) => user.iabsId !== 1);
-      localStorage.setItem(
-        StorageItemNameEnum.USER_INFO,
-        JSON.stringify({
-          iabsId: 1,
-          name: "Admin",
-          username: "admin",
-          password: "password",
-          region: null,
-          role: RoleEnum.ADMIN,
-        })
-      );
-      localStorage.setItem(
-        StorageItemNameEnum.USERS,
-        JSON.stringify([
-          ...withoutAdmin,
-          {
-            iabsId: 1,
-            name: "Admin",
-            username: "admin",
-            password: "password",
-            region: null,
-            role: RoleEnum.ADMIN,
-          },
-        ])
-      );
-      localStorage.setItem(StorageItemNameEnum.ROLE_UPDATED, true);
-      navigate("/dashboard");
-    } else {
-      setError("Invalid username or password");
     }
-  };
+
+    const superAccessToken = getCookie("super-accessToken");
+    const superRefreshToken = getCookie("super-refreshToken");
+
+    if (superAccessToken && superRefreshToken) {
+      navigate("/superadmin-dashboard");
+    }
+  }, [navigate]);
+
+  const handleLogin = useMemo(() => {
+    return () => {
+      const { username, password, isSuperAdmin } = inputValues;
+
+      setUsername(username);
+      setPassword(password);
+      setIsSuperAdmin(isSuperAdmin);
+
+      if (isSuperAdmin) {
+        if (!isSuperAdminSuccess) {
+          setError(
+            superAdminError?.data?.message || "Invalid username or password"
+          );
+          setShowSuperAdmin(true);
+          return;
+        }
+
+        setCookie("super-accessToken", superAdminData.accessToken, 1);
+        setCookie("super-refreshToken", superAdminData.refreshToken, 7);
+
+        navigate("/superadmin-dashboard");
+      } else {
+        if (!isAdminSuccess) {
+          setError(adminError?.data?.message || "Invalid username or password");
+          setShowSuperAdmin(true);
+          return;
+        }
+
+        setCookie("accessToken", adminData.accessToken, 1);
+        setCookie("refreshToken", adminData.refreshToken, 7);
+        navigate("/dashboard");
+      }
+    };
+  }, [
+    inputValues,
+    isSuperAdminSuccess,
+    superAdminError,
+    superAdminData,
+    isAdminSuccess,
+    adminError,
+    adminData,
+    navigate,
+  ]);
 
   return (
     <div style={styles.container}>
@@ -85,17 +104,37 @@ const LoginPage = () => {
             type="text"
             placeholder="Username"
             style={styles.inputField}
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            value={inputValues.username}
+            onChange={(e) =>
+              setInputValues({ ...inputValues, username: e.target.value })
+            }
           />
           <input
             type="password"
             placeholder="Password"
             style={styles.inputField}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            value={inputValues.password}
+            onChange={(e) =>
+              setInputValues({ ...inputValues, password: e.target.value })
+            }
           />
           {error && <p style={styles.errorText}>{error}</p>}
+          {showSuperAdmin && (
+            <div style={styles.checkboxContainer}>
+              <input
+                type="checkbox"
+                id="superAdmin"
+                checked={inputValues.isSuperAdmin}
+                onChange={(e) =>
+                  setInputValues({
+                    ...inputValues,
+                    isSuperAdmin: e.target.checked,
+                  })
+                }
+              />
+              <label htmlFor="superAdmin">Super Admin</label>
+            </div>
+          )}
           <button style={styles.loginButton} onClick={handleLogin}>
             Login
           </button>
@@ -174,6 +213,13 @@ const styles = {
     color: "red",
     textAlign: "center",
     marginBottom: "10px",
+  },
+  checkboxContainer: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: "10px",
+    color: "#333",
   },
 };
 

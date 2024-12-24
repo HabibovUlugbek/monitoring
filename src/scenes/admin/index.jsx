@@ -17,6 +17,8 @@ import { DataGrid } from "@mui/x-data-grid";
 import Header from "components/Header";
 import CustomColumnMenu from "components/DataGridCustomColumnMenu";
 import { RoleEnum, regions, StorageItemNameEnum } from "constants.js";
+import { getCookie } from "helper";
+import { useNavigate } from "react-router-dom";
 
 const Admin = () => {
   const theme = useTheme();
@@ -33,6 +35,17 @@ const Admin = () => {
   });
 
   const [admins, setAdmins] = useState([]);
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    //check cookies
+    const accessToken = getCookie("accessToken");
+    const refreshToken = getCookie("refreshToken");
+    if (!accessToken || !refreshToken) {
+      navigate("/login");
+    }
+  }, [navigate]);
 
   const columns = [
     { field: "iabsId", headerName: "iabs ID", flex: 0.5 },
