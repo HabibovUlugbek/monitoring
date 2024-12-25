@@ -6,7 +6,8 @@ import {
   Search,
   SettingsOutlined,
   ArrowDropDownOutlined,
-  AccountCircleOutlined, // Import the user icon
+  AccountCircleOutlined,
+  NotificationsOutlined, // Import the notifications icon
 } from "@mui/icons-material";
 import FlexBetween from "components/FlexBetween";
 import { useDispatch } from "react-redux";
@@ -22,10 +23,18 @@ import {
   Menu,
   MenuItem,
   useTheme,
+  Badge,
+  List,
+  ListItem,
+  ListItemText,
 } from "@mui/material";
 import { RoleEnum } from "constants";
 import { deleteCookie } from "helper";
 import { useNavigate } from "react-router-dom";
+import {
+  useGetNotificationsQuery,
+  useMarkAsReadNotificationMutation,
+} from "state/api";
 
 const Navbar = ({ user, isSidebarOpen, setIsSidebarOpen }) => {
   const dispatch = useDispatch();
@@ -33,16 +42,30 @@ const Navbar = ({ user, isSidebarOpen, setIsSidebarOpen }) => {
   const navigate = useNavigate();
 
   const [anchorEl, setAnchorEl] = useState(null);
+  const [notificationsAnchorEl, setNotificationsAnchorEl] = useState(null);
   const isOpen = Boolean(anchorEl);
+  const isNotificationsOpen = Boolean(notificationsAnchorEl);
+
+  const { data: notifications } = useGetNotificationsQuery();
+  const [markAsRead] = useMarkAsReadNotificationMutation();
+
   const handleClick = (event) => setAnchorEl(event.currentTarget);
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
+  const handleClose = () => setAnchorEl(null);
+
+  const handleNotificationsClick = (event) =>
+    setNotificationsAnchorEl(event.currentTarget);
+  const handleNotificationsClose = () => setNotificationsAnchorEl(null);
+
   const handleLogout = () => {
     deleteCookie("accessToken");
     deleteCookie("refreshToken");
     handleClose();
     navigate("/login");
+  };
+
+  const handleMarkAsRead = (id) => {
+    markAsRead(id);
+    handleNotificationsClose();
   };
 
   return (
@@ -56,32 +79,25 @@ const Navbar = ({ user, isSidebarOpen, setIsSidebarOpen }) => {
       <Toolbar sx={{ justifyContent: "space-between" }}>
         {/* LEFT SIDE */}
         <FlexBetween>
-          {/* Menu Icon Button */}
           <IconButton onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
-            <MenuIcon style={{ color: "#003366" }} />{" "}
-            {/* Change MenuIcon color */}
+            <MenuIcon style={{ color: "#003366" }} />
           </IconButton>
 
-          {/* Search Bar and Button */}
           <FlexBetween
-            backgroundColor={theme.palette.background.alt} // Keep the background as per your theme
+            backgroundColor={theme.palette.background.alt}
             borderRadius="9px"
             gap="3rem"
             p="0.1rem 1.5rem"
           >
-            {/* InputBase styling */}
             <InputBase
               placeholder="Search..."
               sx={{
-                color: "#003366", // Text color for the search input
-                "::placeholder": { color: "#003366" }, // Placeholder text color
+                color: "#003366",
+                "::placeholder": { color: "#003366" },
               }}
             />
-
-            {/* Search Icon Button */}
             <IconButton>
-              <Search style={{ color: "#003366" }} />{" "}
-              {/* Change Search icon color */}
+              <Search style={{ color: "#003366" }} />
             </IconButton>
           </FlexBetween>
         </FlexBetween>
@@ -98,6 +114,32 @@ const Navbar = ({ user, isSidebarOpen, setIsSidebarOpen }) => {
           <IconButton>
             <SettingsOutlined sx={{ fontSize: "25px" }} />
           </IconButton>
+
+          <IconButton onClick={handleNotificationsClick}>
+            <Badge badgeContent={notifications?.length} color="error">
+              <NotificationsOutlined
+                sx={{ fontSize: "25px", color: "#003366" }}
+              />
+            </Badge>
+          </IconButton>
+          <Menu
+            anchorEl={notificationsAnchorEl}
+            open={isNotificationsOpen}
+            onClose={handleNotificationsClose}
+            anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+          >
+            <List>
+              {notifications?.map((notification) => (
+                <ListItem
+                  key={notification.id}
+                  button
+                  onClick={() => handleMarkAsRead(notification.id)}
+                >
+                  <ListItemText primary={notification.message} />
+                </ListItem>
+              ))}
+            </List>
+          </Menu>
 
           <FlexBetween>
             <Button

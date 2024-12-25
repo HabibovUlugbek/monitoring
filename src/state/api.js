@@ -47,7 +47,7 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
 export const api = createApi({
   baseQuery: baseQueryWithReauth,
   reducerPath: "adminApi",
-  tagTypes: ["Admin"],
+  tagTypes: ["Admin", "Notification"],
   endpoints: (build) => ({
     signInAdmin: build.query({
       query: (credentials) => ({
@@ -96,6 +96,17 @@ export const api = createApi({
       query: () => "admin/me",
       providesTags: ["Admin"],
     }),
+    getNotifications: build.query({
+      query: () => "notifications",
+      providesTags: ["Notification"],
+    }),
+    markAsReadNotification: build.mutation({
+      query: (id) => ({
+        url: `notifications/${id}`,
+        method: "POST",
+      }),
+      invalidatesTags: ["Notification"],
+    }),
   }),
 });
 
@@ -107,4 +118,6 @@ export const {
   useUpdateAdminMutation,
   useGetAdminsQuery,
   useGetMeQuery,
+  useGetNotificationsQuery,
+  useMarkAsReadNotificationMutation,
 } = api;
