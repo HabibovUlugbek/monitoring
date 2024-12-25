@@ -22,7 +22,6 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    //check cookies
     const accessToken = getCookie("accessToken");
     const refreshToken = getCookie("refreshToken");
     if (!accessToken || !refreshToken) {

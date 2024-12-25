@@ -16,9 +16,16 @@ import {
 import { DataGrid } from "@mui/x-data-grid";
 import Header from "components/Header";
 import CustomColumnMenu from "components/DataGridCustomColumnMenu";
-import { RoleEnum, regions, StorageItemNameEnum } from "constants.js";
+import { RoleEnum, regions } from "constants.js";
 import { getCookie } from "helper";
 import { useNavigate } from "react-router-dom";
+import {
+  useGetAdminsQuery,
+  useGetMeQuery,
+  useCreateAdminMutation,
+  useDeleteAdminMutation,
+  useUpdateAdminMutation,
+} from "state/api";
 
 const Admin = () => {
   const theme = useTheme();
@@ -26,20 +33,25 @@ const Admin = () => {
   const [open, setOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [newAdmin, setNewAdmin] = useState({
-    iabsId: "",
+    id: "",
     name: "",
     username: "",
-    password: "",
     role: "",
     region: "",
+    password: "",
   });
 
+  const { data: adminsData, refetch } = useGetAdminsQuery();
   const [admins, setAdmins] = useState([]);
+  const [createAdmin] = useCreateAdminMutation();
+  const [deleteAdmin] = useDeleteAdminMutation();
+  const [updateAdmin] = useUpdateAdminMutation();
+
+  const { data: myInfo } = useGetMeQuery();
 
   const navigate = useNavigate();
 
   useEffect(() => {
-    //check cookies
     const accessToken = getCookie("accessToken");
     const refreshToken = getCookie("refreshToken");
     if (!accessToken || !refreshToken) {
@@ -47,8 +59,14 @@ const Admin = () => {
     }
   }, [navigate]);
 
+  useEffect(() => {
+    if (adminsData) {
+      setAdmins(adminsData);
+    }
+  }, [adminsData]);
+
   const columns = [
-    { field: "iabsId", headerName: "iabs ID", flex: 0.5 },
+    { field: "id", headerName: "ID", flex: 0.5 },
     { field: "name", headerName: "Name", flex: 0.5 },
     {
       field: "region",
@@ -63,7 +81,6 @@ const Admin = () => {
       field: "role",
       headerName: "Role",
       flex: 0.5,
-      // valueGetter: (params) => RoleEnum[params.value] || "Not defined",
     },
     {
       field: "control",
@@ -83,7 +100,7 @@ const Admin = () => {
                   "&:hover": {
                     backgroundColor: "#002244",
                   },
-                  marginRight: "8px", // Adding space between buttons
+                  marginRight: "8px",
                 }}
                 onClick={() => handleEdit(params.row)}
               >
@@ -92,7 +109,7 @@ const Admin = () => {
               <Button
                 variant="outlined"
                 color="error"
-                onClick={() => handleDelete(params.row.iabsId)}
+                onClick={() => handleDelete(params.row.id)}
               >
                 Delete
               </Button>
@@ -104,50 +121,16 @@ const Admin = () => {
   ];
 
   useEffect(() => {
-    const storedUserInfo = JSON.parse(
-      localStorage.getItem(StorageItemNameEnum.USER_INFO)
-    );
-    if (storedUserInfo) {
-      setUserInfo(storedUserInfo);
+    if (myInfo) {
+      setUserInfo(myInfo);
     }
-
-    const storedAdmins = JSON.parse(
-      localStorage.getItem(StorageItemNameEnum.USERS)
-    );
-    if (storedAdmins) {
-      const me = JSON.parse(
-        localStorage.getItem(StorageItemNameEnum.USER_INFO)
-      );
-      if (storedUserInfo.role === RoleEnum.ADMIN) {
-        const withoutMe = storedAdmins.filter(
-          (user) => user.iabsId !== me?.iabsId
-        );
-        setAdmins(withoutMe);
-      } else if (storedUserInfo.role === RoleEnum.REPUBLIC_EMPLOYEE) {
-        const admins = storedAdmins.filter(
-          (user) => user.region === storedUserInfo.region
-        );
-        const withoutMe = admins.filter((user) => user.iabsId !== me?.iabsId);
-        setAdmins(withoutMe);
-      } else if (storedUserInfo.role === RoleEnum.REGION_BOSS) {
-        const admins = storedAdmins.filter(
-          (user) =>
-            user.region === storedUserInfo.region &&
-            user.role === RoleEnum.REGION_EMPLOYEE
-        );
-        const withoutMe = admins.filter((user) => user.iabsId !== me?.iabsId);
-        setAdmins(withoutMe);
-      } else if (storedUserInfo.role === RoleEnum.REGION_EMPLOYEE) {
-        setAdmins([me]);
-      }
-    }
-  }, []);
+  }, [myInfo]);
 
   const handleOpen = () => {
     setOpen(true);
     setEditMode(false);
     setNewAdmin({
-      iabsId: "",
+      id: "",
       name: "",
       username: "",
       password: "",
@@ -161,43 +144,26 @@ const Admin = () => {
   const handleChange = (e) =>
     setNewAdmin({ ...newAdmin, [e.target.name]: e.target.value });
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (editMode) {
-      setAdmins((prevAdmins) =>
-        prevAdmins.map((admin) => {
-          return admin.iabsId === newAdmin.iabsId ? newAdmin : admin;
-        })
-      );
-      const updatedAdmins = admins.map((admin) => {
-        return admin.iabsId === newAdmin.iabsId ? newAdmin : admin;
-      });
-      localStorage.setItem(
-        StorageItemNameEnum.USERS,
-        JSON.stringify([...updatedAdmins, userInfo])
-      );
+      await updateAdmin(newAdmin);
     } else {
-      setAdmins([...admins, newAdmin]);
-      localStorage.setItem(
-        StorageItemNameEnum.USERS,
-        JSON.stringify([...admins, newAdmin, userInfo])
-      );
+      await createAdmin(newAdmin);
     }
     handleClose();
+    refetch();
   };
 
   const handleEdit = (admin) => {
     setEditMode(true);
     setNewAdmin(admin);
     setOpen(true);
+    refetch();
   };
 
-  const handleDelete = (iabsId) => {
-    const updatedAdmins = admins.filter((admin) => admin.iabsId !== iabsId);
-    setAdmins(updatedAdmins);
-    localStorage.setItem(
-      StorageItemNameEnum.USERS,
-      JSON.stringify([...updatedAdmins, userInfo])
-    );
+  const handleDelete = async (id) => {
+    await deleteAdmin(id);
+    refetch();
   };
 
   return (
@@ -205,7 +171,8 @@ const Admin = () => {
       <Box display="flex" justifyContent="space-between">
         <Header title="ADMINS" subtitle="Managing admins and list of admins" />
         <Box display="flex" alignItems="center">
-          {userInfo.role === RoleEnum.ADMIN ? (
+          {userInfo.role === RoleEnum.REPUBLIC_BOSS ||
+          userInfo.role === RoleEnum.REPUBLIC_EMPLOYEE ? (
             <Button
               variant="contained"
               onClick={handleOpen}
@@ -236,7 +203,7 @@ const Admin = () => {
             color: "#003366",
           },
           "& .MuiDataGrid-columnHeaderTitle": {
-            fontWeight: "bold", // Bold header text
+            fontWeight: "bold",
           },
           "& .MuiDataGrid-virtualScroller": {
             backgroundColor: theme.palette.primary.light,
@@ -246,13 +213,13 @@ const Admin = () => {
               outline: "none",
             },
           "& .MuiDataGrid-menuIconButton": {
-            color: "#003366", // Color for 3-dot menu icon in column headers
+            color: "#003366",
           },
           "& .MuiDataGrid-sortIcon": {
-            color: "#003366", // Sorting arrow color
+            color: "#003366",
           },
           "& .MuiTablePagination-actions .MuiIconButton-root": {
-            color: "#003366", // Change color of pagination icons
+            color: "#003366",
           },
           "& .MuiDataGrid-footerContainer": {
             backgroundColor: theme.palette.background.alt,
@@ -260,10 +227,10 @@ const Admin = () => {
             borderTop: "none",
           },
           "& .MuiSelect-icon": {
-            color: "#003366", // Color of dropdown icon for changing page number
+            color: "#003366",
           },
           "& .MuiTablePagination-root": {
-            color: "#003366", // Footer pagination text color
+            color: "#003366",
           },
           "& .MuiDataGrid-footerContainer .MuiTablePagination-rootContainer": {
             color: theme.palette.secondary[100],
@@ -275,7 +242,7 @@ const Admin = () => {
       >
         <DataGrid
           loading={!admins}
-          getRowId={(row) => row.iabsId}
+          getRowId={(row) => row.id}
           rows={admins || []}
           columns={columns}
           components={{
@@ -292,20 +259,19 @@ const Admin = () => {
           <TextField
             autoFocus
             margin="dense"
-            name="iabsId"
-            label="iabs ID"
+            name="id"
+            label="ID"
             type="text"
             fullWidth
-            value={newAdmin.iabsId}
+            value={newAdmin.id}
             onChange={handleChange}
             InputLabelProps={{
               style: { color: "#003366" },
             }}
             InputProps={{
               style: { color: "#003366" },
-              readOnly: editMode, // Make iabsId read-only in edit mode
+              readOnly: editMode,
             }}
-            // disabled={editMode}
           />
           <TextField
             margin="dense"
@@ -341,7 +307,7 @@ const Admin = () => {
             margin="dense"
             name="password"
             label="Password"
-            type="text"
+            type="password"
             fullWidth
             value={newAdmin.password}
             onChange={handleChange}

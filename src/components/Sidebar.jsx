@@ -23,7 +23,6 @@ import {
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import FlexBetween from "./FlexBetween";
-import profileImage from "assets/profile.jpeg";
 import { RoleEnum, StorageItemNameEnum } from "constants.js";
 
 const Sidebar = ({
@@ -38,55 +37,20 @@ const Sidebar = ({
   const navItems = [
     {
       text: "Dashboard",
+      show:
+        userInfo.role === RoleEnum.REPUBLIC_BOSS ||
+        userInfo.role === RoleEnum.REPUBLIC_EMPLOYEE,
       icon: <HomeOutlined />,
     },
-    // {
-    //   text: "Client Facing",
-    //   icon: null,
-    // },
-    // {
-    //   text: "Products",
-    //   icon: <ShoppingCartOutlined />,
-    // },
-    // {
-    //   text: "Customers",
-    //   icon: <Groups2Outlined />,
-    // },
-    // {
-    //   text: "Transactions",
-    //   icon: <ReceiptLongOutlined />,
-    // },
-    // {
-    //   text: "Geography",
-    //   icon: <PublicOutlined />,
-    // },
-    // {
-    //   text: "Sales",
-    //   icon: null,
-    // },
-    // {
-    //   text: "Overview",
-    //   icon: <PointOfSaleOutlined />,
-    // },
-    // {
-    //   text: "Daily",
-    //   icon: <TodayOutlined />,
-    // },
-    // {
-    //   text: "Monthly",
-    //   icon: <CalendarMonthOutlined />,
-    // },
-    // {
-    //   text: "Breakdown",
-    //   icon: <PieChartOutlined />,
-    // },
     {
       text: "Management",
       icon: null,
     },
     {
       text: "Admin",
-      show: userInfo.role === RoleEnum.ADMIN,
+      show:
+        userInfo.role === RoleEnum.REPUBLIC_BOSS ||
+        userInfo.role === RoleEnum.REPUBLIC_EMPLOYEE,
       icon: <AdminPanelSettingsOutlined />,
     },
     {
@@ -148,7 +112,10 @@ const Sidebar = ({
               </FlexBetween>
             </Box>
             <List>
-              {navItems.map(({ text, icon }) => {
+              {navItems.map(({ text, icon, show }) => {
+                if (show === false) {
+                  return null;
+                }
                 if (!icon) {
                   return (
                     <Typography key={text} sx={{ m: "2.25rem 0 1rem 3rem" }}>
@@ -156,6 +123,7 @@ const Sidebar = ({
                     </Typography>
                   );
                 }
+
                 const lcText = text.toLowerCase();
 
                 return (
@@ -207,15 +175,14 @@ const Sidebar = ({
           <Box position="absolute" bottom="2rem">
             <Divider />
             <FlexBetween textTransform="none" gap="1rem" m="1.5rem 2rem 0 3rem">
-              <Box
-                component="img"
-                alt="profile"
-                src={profileImage}
-                height="40px"
-                width="40px"
-                borderRadius="50%"
-                sx={{ objectFit: "cover" }}
-              />
+              <Box>
+                <AdminPanelSettingsOutlined
+                  sx={{
+                    color: theme.palette.secondary[300],
+                    fontSize: "40px",
+                  }}
+                />
+              </Box>
               <Box textAlign="left">
                 <Typography
                   fontWeight="bold"

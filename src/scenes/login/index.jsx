@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "assets/logo.png";
 import { useSignInAdminQuery } from "state/api";
@@ -44,49 +44,57 @@ const LoginPage = () => {
     }
   }, [navigate]);
 
-  const handleLogin = useMemo(() => {
-    return () => {
-      const { username, password, isSuperAdmin } = inputValues;
+  const handleLogin = () => {
+    const { username, password, isSuperAdmin } = inputValues;
 
-      setUsername(username);
-      setPassword(password);
-      setIsSuperAdmin(isSuperAdmin);
+    setUsername(username);
+    setPassword(password);
+    setIsSuperAdmin(isSuperAdmin);
+  };
 
-      if (isSuperAdmin) {
-        if (!isSuperAdminSuccess) {
-          setError(
-            superAdminError?.data?.message || "Invalid username or password"
-          );
-          setShowSuperAdmin(true);
-          return;
-        }
-
+  useEffect(() => {
+    if (isSuperAdmin) {
+      if (isSuperAdminSuccess) {
         setCookie("super-accessToken", superAdminData.accessToken, 1);
         setCookie("super-refreshToken", superAdminData.refreshToken, 7);
-
         navigate("/superadmin-dashboard");
-      } else {
-        if (!isAdminSuccess) {
-          setError(adminError?.data?.message || "Invalid username or password");
-          setShowSuperAdmin(true);
-          return;
-        }
-
+      } else if (superAdminError) {
+        setError(
+          superAdminError?.data?.message || "Invalid username or password"
+        );
+        setShowSuperAdmin(true);
+      }
+    } else {
+      if (isAdminSuccess) {
         setCookie("accessToken", adminData.accessToken, 1);
         setCookie("refreshToken", adminData.refreshToken, 7);
         navigate("/dashboard");
+      } else if (adminError) {
+        setError(adminError?.data?.message || "Invalid username or password");
+        setShowSuperAdmin(true);
       }
-    };
+    }
   }, [
-    inputValues,
+    isSuperAdmin,
     isSuperAdminSuccess,
-    superAdminError,
     superAdminData,
+    superAdminError,
     isAdminSuccess,
-    adminError,
     adminData,
+    adminError,
     navigate,
   ]);
+
+  useEffect(() => {
+    if (superAdminData) {
+      setCookie("super-accessToken", superAdminData.accessToken, 1);
+      setCookie("super-refreshToken", superAdminData.refreshToken, 7);
+    }
+    if (adminData) {
+      setCookie("accessToken", adminData.accessToken, 1);
+      setCookie("refreshToken", adminData.refreshToken, 7);
+    }
+  }, [superAdminData, adminData]);
 
   return (
     <div style={styles.container}>

@@ -88,6 +88,14 @@ export const api = createApi({
       }),
       invalidatesTags: ["Admin"],
     }),
+    getAdmins: build.query({
+      query: () => "admin",
+      providesTags: ["Admin"],
+    }),
+    getMe: build.query({
+      query: () => "admin/me",
+      providesTags: ["Admin"],
+    }),
   }),
 });
 
@@ -97,4 +105,6 @@ export const {
   useDeleteAdminMutation,
   useCreateAdminMutation,
   useUpdateAdminMutation,
+  useGetAdminsQuery,
+  useGetMeQuery,
 } = api;

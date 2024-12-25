@@ -6,11 +6,11 @@ import {
   Search,
   SettingsOutlined,
   ArrowDropDownOutlined,
+  AccountCircleOutlined, // Import the user icon
 } from "@mui/icons-material";
 import FlexBetween from "components/FlexBetween";
 import { useDispatch } from "react-redux";
 import { setMode } from "state";
-import profileImage from "assets/profile.jpeg";
 import {
   AppBar,
   Button,
@@ -23,15 +23,27 @@ import {
   MenuItem,
   useTheme,
 } from "@mui/material";
+import { RoleEnum } from "constants";
+import { deleteCookie } from "helper";
+import { useNavigate } from "react-router-dom";
 
 const Navbar = ({ user, isSidebarOpen, setIsSidebarOpen }) => {
   const dispatch = useDispatch();
   const theme = useTheme();
+  const navigate = useNavigate();
 
   const [anchorEl, setAnchorEl] = useState(null);
   const isOpen = Boolean(anchorEl);
   const handleClick = (event) => setAnchorEl(event.currentTarget);
-  const handleClose = () => setAnchorEl(null);
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+  const handleLogout = () => {
+    deleteCookie("accessToken");
+    deleteCookie("refreshToken");
+    handleClose();
+    navigate("/login");
+  };
 
   return (
     <AppBar
@@ -98,14 +110,8 @@ const Navbar = ({ user, isSidebarOpen, setIsSidebarOpen }) => {
                 gap: "1rem",
               }}
             >
-              <Box
-                component="img"
-                alt="profile"
-                src={profileImage}
-                height="32px"
-                width="32px"
-                borderRadius="50%"
-                sx={{ objectFit: "cover" }}
+              <AccountCircleOutlined
+                sx={{ fontSize: "32px", color: theme.palette.secondary[100] }}
               />
               <Box textAlign="left">
                 <Typography
@@ -119,7 +125,7 @@ const Navbar = ({ user, isSidebarOpen, setIsSidebarOpen }) => {
                   fontSize="0.75rem"
                   sx={{ color: theme.palette.secondary[200] }}
                 >
-                  {user.occupation}
+                  {RoleEnum[user.role]}
                 </Typography>
               </Box>
               <ArrowDropDownOutlined
@@ -132,7 +138,7 @@ const Navbar = ({ user, isSidebarOpen, setIsSidebarOpen }) => {
               onClose={handleClose}
               anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
             >
-              <MenuItem onClick={handleClose}>Log Out</MenuItem>
+              <MenuItem onClick={handleLogout}>Log Out</MenuItem>
             </Menu>
           </FlexBetween>
         </FlexBetween>
