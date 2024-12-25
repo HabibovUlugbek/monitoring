@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "assets/logo.png";
-import { useSignInAdminQuery } from "state/api";
+import { useSignInAdminQuery, useGetMeQuery } from "state/api";
 import { useSignInSuperAdminQuery } from "state/super-admin-api";
 import { getCookie, setCookie } from "helper";
+import { RoleEnum } from "constants";
 
 const LoginPage = () => {
   const [username, setUsername] = useState("");
@@ -17,6 +18,7 @@ const LoginPage = () => {
     isSuperAdmin: false,
   });
   const navigate = useNavigate();
+  const { data: meData, refetch } = useGetMeQuery();
   const {
     data: superAdminData,
     isSuccess: isSuperAdminSuccess,
@@ -28,12 +30,24 @@ const LoginPage = () => {
     error: adminError,
   } = useSignInAdminQuery({ username, password }, { skip: isSuperAdmin });
 
+  const navigateUsersByRole = useCallback(() => {
+    switch (RoleEnum[meData.role]) {
+      case RoleEnum.REPUBLIC_EMPLOYEE:
+      case RoleEnum.REPUBLIC_BOSS:
+        navigate("/dashboard");
+        break;
+      default:
+        navigate("/loans");
+    }
+  }, [meData, navigate]);
+
   useEffect(() => {
     const accessToken = getCookie("accessToken");
     const refreshToken = getCookie("refreshToken");
 
     if (accessToken && refreshToken) {
-      navigate("/dashboard");
+      refetch();
+      navigateUsersByRole();
     }
 
     const superAccessToken = getCookie("super-accessToken");
@@ -42,7 +56,7 @@ const LoginPage = () => {
     if (superAccessToken && superRefreshToken) {
       navigate("/superadmin-dashboard");
     }
-  }, [navigate]);
+  }, [navigate, navigateUsersByRole, refetch]);
 
   const handleLogin = () => {
     const { username, password, isSuperAdmin } = inputValues;
@@ -50,6 +64,7 @@ const LoginPage = () => {
     setUsername(username);
     setPassword(password);
     setIsSuperAdmin(isSuperAdmin);
+    refetch();
   };
 
   useEffect(() => {
@@ -68,7 +83,7 @@ const LoginPage = () => {
       if (isAdminSuccess) {
         setCookie("accessToken", adminData.accessToken, 1);
         setCookie("refreshToken", adminData.refreshToken, 7);
-        navigate("/dashboard");
+        navigateUsersByRole();
       } else if (adminError) {
         setError(adminError?.data?.message || "Invalid username or password");
         setShowSuperAdmin(true);
@@ -83,6 +98,7 @@ const LoginPage = () => {
     adminData,
     adminError,
     navigate,
+    navigateUsersByRole,
   ]);
 
   useEffect(() => {

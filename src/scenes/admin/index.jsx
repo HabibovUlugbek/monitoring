@@ -57,7 +57,8 @@ const Admin = () => {
     if (!accessToken || !refreshToken) {
       navigate("/login");
     }
-  }, [navigate]);
+    refetch();
+  }, [navigate, refetch]);
 
   useEffect(() => {
     if (adminsData) {
@@ -68,6 +69,7 @@ const Admin = () => {
   const columns = [
     { field: "id", headerName: "ID", flex: 0.5 },
     { field: "name", headerName: "Name", flex: 0.5 },
+    { field: "username", headerName: "Username", flex: 0.5 },
     {
       field: "region",
       headerName: "Region",
@@ -81,13 +83,17 @@ const Admin = () => {
       field: "role",
       headerName: "Role",
       flex: 0.5,
+      valueGetter: (params) => RoleEnum[params.value],
     },
     {
       field: "control",
       headerName: "Control",
       flex: 0.5,
       renderCell: (params) => {
-        if (userInfo.role !== RoleEnum.ADMIN) {
+        if (
+          RoleEnum[userInfo.role] !== RoleEnum.REPUBLIC_BOSS &&
+          RoleEnum[userInfo.role] !== RoleEnum.REPUBLIC_EMPLOYEE
+        ) {
           return "You don't have access";
         } else {
           return (
@@ -171,8 +177,8 @@ const Admin = () => {
       <Box display="flex" justifyContent="space-between">
         <Header title="ADMINS" subtitle="Managing admins and list of admins" />
         <Box display="flex" alignItems="center">
-          {userInfo.role === RoleEnum.REPUBLIC_BOSS ||
-          userInfo.role === RoleEnum.REPUBLIC_EMPLOYEE ? (
+          {RoleEnum[userInfo.role] === RoleEnum.REPUBLIC_BOSS ||
+          RoleEnum[userInfo.role] === RoleEnum.REPUBLIC_EMPLOYEE ? (
             <Button
               variant="contained"
               onClick={handleOpen}
@@ -257,23 +263,6 @@ const Admin = () => {
         </DialogTitle>
         <DialogContent sx={{ backgroundColor: "white", color: "#003366" }}>
           <TextField
-            autoFocus
-            margin="dense"
-            name="id"
-            label="ID"
-            type="text"
-            fullWidth
-            value={newAdmin.id}
-            onChange={handleChange}
-            InputLabelProps={{
-              style: { color: "#003366" },
-            }}
-            InputProps={{
-              style: { color: "#003366" },
-              readOnly: editMode,
-            }}
-          />
-          <TextField
             margin="dense"
             name="name"
             label="Name"
@@ -285,7 +274,7 @@ const Admin = () => {
               style: { color: "#003366" },
             }}
             InputProps={{
-              style: { color: "#003366" },
+              style: { color: "#003366", border: "1px solid #003366" },
             }}
           />
           <TextField
@@ -300,7 +289,7 @@ const Admin = () => {
               style: { color: "#003366" },
             }}
             InputProps={{
-              style: { color: "#003366" },
+              style: { color: "#003366", border: "1px solid #003366" },
             }}
           />
           <TextField
@@ -315,7 +304,7 @@ const Admin = () => {
               style: { color: "#003366" },
             }}
             InputProps={{
-              style: { color: "#003366" },
+              style: { color: "#003366", border: "1px solid #003366" },
             }}
           />
           <FormControl fullWidth margin="dense">
@@ -325,10 +314,10 @@ const Admin = () => {
               value={newAdmin.role}
               onChange={handleChange}
               displayEmpty
-              sx={{ color: "#003366" }}
+              sx={{ color: "#003366", border: "1px solid #003366" }}
             >
               {Object.entries(RoleEnum).map(([key, value]) => (
-                <MenuItem key={key} value={value}>
+                <MenuItem key={key} value={key}>
                   {value}
                 </MenuItem>
               ))}
@@ -341,7 +330,7 @@ const Admin = () => {
               value={newAdmin.region}
               onChange={handleChange}
               displayEmpty
-              sx={{ color: "#003366" }}
+              sx={{ color: "#003366", border: "1px solid #003366" }}
             >
               {regions.map((region) => (
                 <MenuItem key={region.id} value={region.id}>

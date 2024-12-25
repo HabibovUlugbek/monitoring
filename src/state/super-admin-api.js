@@ -71,6 +71,29 @@ export const superapi = createApi({
       query: () => "super-admin/admins",
       providesTags: ["SuperAdmin"],
     }),
+    deleteAdmin: build.mutation({
+      query: (id) => ({
+        url: `admin/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Admin"],
+    }),
+    createAdmin: build.mutation({
+      query: (admin) => ({
+        url: "admin",
+        method: "POST",
+        body: admin,
+      }),
+      invalidatesTags: ["Admin"],
+    }),
+    updateAdmin: build.mutation({
+      query: (admin) => ({
+        url: `admin/${admin.id}`,
+        method: "PATCH",
+        body: admin,
+      }),
+      invalidatesTags: ["Admin"],
+    }),
   }),
 });
 
@@ -78,4 +101,7 @@ export const {
   useSignInSuperAdminQuery,
   useRefreshTokenSuperAdminQuery,
   useGetAdminsForSuperAdminQuery,
+  useDeleteAdminMutation,
+  useCreateAdminMutation,
+  useUpdateAdminMutation,
 } = superapi;

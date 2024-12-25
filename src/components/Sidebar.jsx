@@ -23,7 +23,7 @@ import {
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import FlexBetween from "./FlexBetween";
-import { RoleEnum, StorageItemNameEnum } from "constants.js";
+import { RoleEnum } from "constants.js";
 
 const Sidebar = ({
   user,
@@ -32,14 +32,12 @@ const Sidebar = ({
   setIsSidebarOpen,
   isNonMobile,
 }) => {
-  const [userInfo, setUserInfo] = useState({});
-
   const navItems = [
     {
       text: "Dashboard",
       show:
-        userInfo.role === RoleEnum.REPUBLIC_BOSS ||
-        userInfo.role === RoleEnum.REPUBLIC_EMPLOYEE,
+        RoleEnum[user.role] === RoleEnum.REPUBLIC_BOSS ||
+        RoleEnum[user.role] === RoleEnum.REPUBLIC_EMPLOYEE,
       icon: <HomeOutlined />,
     },
     {
@@ -49,8 +47,10 @@ const Sidebar = ({
     {
       text: "Admin",
       show:
-        userInfo.role === RoleEnum.REPUBLIC_BOSS ||
-        userInfo.role === RoleEnum.REPUBLIC_EMPLOYEE,
+        RoleEnum[user.role] === RoleEnum.REPUBLIC_BOSS ||
+        RoleEnum[user.role] === RoleEnum.REPUBLIC_EMPLOYEE ||
+        RoleEnum[user.role] === RoleEnum.REGION_BOSS ||
+        RoleEnum[user.role] === RoleEnum.REGION_CHECKER_BOSS,
       icon: <AdminPanelSettingsOutlined />,
     },
     {
@@ -67,15 +67,6 @@ const Sidebar = ({
   useEffect(() => {
     setActive(pathname.substring(1));
   }, [pathname]);
-
-  useEffect(() => {
-    const storedUserInfo = JSON.parse(
-      localStorage.getItem(StorageItemNameEnum.USER_INFO)
-    );
-    if (storedUserInfo) {
-      setUserInfo(storedUserInfo);
-    }
-  }, []);
 
   return (
     <Box component="nav">

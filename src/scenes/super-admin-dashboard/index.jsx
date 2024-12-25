@@ -32,7 +32,7 @@ import {
   useCreateAdminMutation,
   useDeleteAdminMutation,
   useUpdateAdminMutation,
-} from "state/api";
+} from "state/super-admin-api";
 import { useGetAdminsForSuperAdminQuery } from "state/super-admin-api";
 import { RoleEnum } from "constants";
 import { regions } from "constants";
