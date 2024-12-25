@@ -6,7 +6,6 @@ const getRefreshTokenFromCookie = () => getCookie("super-refreshToken");
 
 const handle401Error = async (args, api, extraOptions, baseQuery) => {
   let result = await baseQuery(args, api, extraOptions);
-  console.log(1234, result);
   if (result.error && result.error.status === 401) {
     const refreshToken = getRefreshTokenFromCookie();
     if (refreshToken) {
@@ -32,7 +31,7 @@ const handle401Error = async (args, api, extraOptions, baseQuery) => {
 
 const baseQueryWithReauth = async (args, api, extraOptions) => {
   const baseQuery = fetchBaseQuery({
-    baseUrl: "http://localhost:4000/api/v1",
+    baseUrl: process.env.REACT_APP_BASE_URL,
     prepareHeaders: (headers) => {
       const accessToken = getAccessTokenFromCookie();
       console.log(123, accessToken);

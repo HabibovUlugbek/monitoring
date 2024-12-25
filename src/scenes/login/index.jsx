@@ -64,7 +64,6 @@ const LoginPage = () => {
     setUsername(username);
     setPassword(password);
     setIsSuperAdmin(isSuperAdmin);
-    refetch();
   };
 
   useEffect(() => {
