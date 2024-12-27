@@ -47,7 +47,7 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
 export const api = createApi({
   baseQuery: baseQueryWithReauth,
   reducerPath: "adminApi",
-  tagTypes: ["Admin", "Notification"],
+  tagTypes: ["Admin", "Notification", "Loan"],
   endpoints: (build) => ({
     signInAdmin: build.query({
       query: (credentials) => ({
@@ -107,6 +107,22 @@ export const api = createApi({
       }),
       invalidatesTags: ["Notification"],
     }),
+    getLoans: build.query({
+      query: () => "loan",
+      providesTags: ["Loan"],
+    }),
+    getLoan: build.query({
+      query: (id) => `loan/${id}`,
+      providesTags: ["Loan"],
+    }),
+    assignLoan: build.mutation({
+      query: (data) => ({
+        url: "loan/assign",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["Loan"],
+    }),
   }),
 });
 
@@ -120,4 +136,7 @@ export const {
   useGetMeQuery,
   useGetNotificationsQuery,
   useMarkAsReadNotificationMutation,
+  useGetLoansQuery,
+  useGetLoanQuery,
+  useAssignLoanMutation,
 } = api;

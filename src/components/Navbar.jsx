@@ -4,7 +4,6 @@ import {
   DarkModeOutlined,
   Menu as MenuIcon,
   Search,
-  SettingsOutlined,
   ArrowDropDownOutlined,
   AccountCircleOutlined,
   NotificationsOutlined, // Import the notifications icon
@@ -46,14 +45,17 @@ const Navbar = ({ user, isSidebarOpen, setIsSidebarOpen }) => {
   const isOpen = Boolean(anchorEl);
   const isNotificationsOpen = Boolean(notificationsAnchorEl);
 
-  const { data: notifications } = useGetNotificationsQuery();
+  const { data: notifications, refetch } = useGetNotificationsQuery();
   const [markAsRead] = useMarkAsReadNotificationMutation();
 
   const handleClick = (event) => setAnchorEl(event.currentTarget);
   const handleClose = () => setAnchorEl(null);
 
-  const handleNotificationsClick = (event) =>
+  const handleNotificationsClick = (event) => {
     setNotificationsAnchorEl(event.currentTarget);
+    refetch();
+  };
+
   const handleNotificationsClose = () => setNotificationsAnchorEl(null);
 
   const handleLogout = () => {
@@ -72,7 +74,7 @@ const Navbar = ({ user, isSidebarOpen, setIsSidebarOpen }) => {
     <AppBar
       sx={{
         position: "static",
-        background: "none",
+        background: "white",
         boxShadow: "none",
       }}
     >
@@ -106,13 +108,10 @@ const Navbar = ({ user, isSidebarOpen, setIsSidebarOpen }) => {
         <FlexBetween gap="1.5rem">
           <IconButton onClick={() => dispatch(setMode())}>
             {theme.palette.mode === "dark" ? (
-              <DarkModeOutlined sx={{ fontSize: "25px" }} />
+              <DarkModeOutlined sx={{ fontSize: "25px", color: "#003366" }} />
             ) : (
-              <LightModeOutlined sx={{ fontSize: "25px" }} />
+              <LightModeOutlined sx={{ fontSize: "25px", color: "#003366" }} />
             )}
-          </IconButton>
-          <IconButton>
-            <SettingsOutlined sx={{ fontSize: "25px" }} />
           </IconButton>
 
           <IconButton onClick={handleNotificationsClick}>
@@ -129,15 +128,21 @@ const Navbar = ({ user, isSidebarOpen, setIsSidebarOpen }) => {
             anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
           >
             <List>
-              {notifications?.map((notification) => (
-                <ListItem
-                  key={notification.id}
-                  button
-                  onClick={() => handleMarkAsRead(notification.id)}
-                >
-                  <ListItemText primary={notification.message} />
+              {notifications?.length ? (
+                notifications.map((notification) => (
+                  <ListItem
+                    key={notification.id}
+                    button
+                    onClick={() => handleMarkAsRead(notification.id)}
+                  >
+                    <ListItemText secondary={notification.message} />
+                  </ListItem>
+                ))
+              ) : (
+                <ListItem>
+                  <ListItemText primary="Sizda bildirishnomalar yo'q" />
                 </ListItem>
-              ))}
+              )}
             </List>
           </Menu>
 
@@ -153,25 +158,22 @@ const Navbar = ({ user, isSidebarOpen, setIsSidebarOpen }) => {
               }}
             >
               <AccountCircleOutlined
-                sx={{ fontSize: "32px", color: theme.palette.secondary[100] }}
+                sx={{ fontSize: "32px", color: "#003366" }}
               />
               <Box textAlign="left">
                 <Typography
                   fontWeight="bold"
                   fontSize="0.85rem"
-                  sx={{ color: theme.palette.secondary[100] }}
+                  sx={{ color: "#003366" }}
                 >
                   {user.name}
                 </Typography>
-                <Typography
-                  fontSize="0.75rem"
-                  sx={{ color: theme.palette.secondary[200] }}
-                >
+                <Typography fontSize="0.75rem" sx={{ color: "#003366" }}>
                   {RoleEnum[user.role]}
                 </Typography>
               </Box>
               <ArrowDropDownOutlined
-                sx={{ color: theme.palette.secondary[300], fontSize: "25px" }}
+                sx={{ color: "#003366", fontSize: "25px" }}
               />
             </Button>
             <Menu

@@ -31,6 +31,7 @@ const LoginPage = () => {
   } = useSignInAdminQuery({ username, password }, { skip: isSuperAdmin });
 
   const navigateUsersByRole = useCallback(() => {
+    if (!meData) refetch();
     switch (RoleEnum[meData.role]) {
       case RoleEnum.REPUBLIC_EMPLOYEE:
       case RoleEnum.REPUBLIC_BOSS:
@@ -39,7 +40,7 @@ const LoginPage = () => {
       default:
         navigate("/loans");
     }
-  }, [meData, navigate]);
+  }, [meData, navigate, refetch]);
 
   useEffect(() => {
     const accessToken = getCookie("accessToken");

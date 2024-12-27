@@ -16,7 +16,6 @@ import {
 import { DataGrid } from "@mui/x-data-grid";
 import Header from "components/Header";
 import CustomColumnMenu from "components/DataGridCustomColumnMenu";
-import * as xlsx from "xlsx";
 import {
   LoanStatusEnum,
   regions,
@@ -24,15 +23,29 @@ import {
   StorageItemNameEnum,
 } from "constants.js";
 
+import { useNavigate } from "react-router-dom";
+import {
+  useGetLoansQuery,
+  useAssignLoanMutation,
+  useGetAdminsQuery,
+  useGetMeQuery,
+} from "state/api";
+import { getCookie } from "helper";
+
 const Loans = () => {
   const theme = useTheme();
-  const [userInfo, setUserInfo] = useState({});
-  const [loans, setLoans] = useState([]);
+  const navigate = useNavigate();
+
+  const { data: loansData } = useGetLoansQuery();
+  const { data: adminsData } = useGetAdminsQuery();
+  const { data: meData, refetch } = useGetMeQuery();
+  const [assignLoan] = useAssignLoanMutation();
+
+  const [selectedLoanId, setSelectedLoanId] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
+
   const [open, setOpen] = useState(false);
   const [checkOpen, setCheckOpen] = useState(false);
-  const [selectedLoanId, setSelectedLoanId] = useState(null);
-  const [selectedUser, setSelectedUser] = useState("");
-  const [regionUsers, setRegionUsers] = useState([]);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState("");
   const [selectedFileName, setSelectedFileName] = useState("");
@@ -61,30 +74,11 @@ const Loans = () => {
   const handleClose = () => {
     setOpen(false);
     setSelectedLoanId(null);
-    setSelectedUser("");
+    setSelectedUser(null);
   };
 
-  const handleAssignUser = () => {
-    const updatedLoans = loans.map((loan) =>
-      loan.loanId === selectedLoanId
-        ? { ...loan, responsible: selectedUser }
-        : loan
-    );
-    setLoans(updatedLoans);
-
-    const storedLoans = localStorage.getItem(StorageItemNameEnum.LOANS);
-    if (storedLoans) {
-      const updatedStoredLoans = JSON.parse(storedLoans).map((loan) =>
-        loan.loanId === selectedLoanId
-          ? { ...loan, responsible: selectedUser }
-          : loan
-      );
-
-      localStorage.setItem(
-        StorageItemNameEnum.LOANS,
-        JSON.stringify(updatedStoredLoans)
-      );
-    }
+  const handleAssignUser = (id) => {
+    assignLoan({ loanId: selectedLoanId, userId: selectedUser.id });
     handleClose();
   };
 
@@ -118,46 +112,7 @@ const Loans = () => {
   };
 
   const handleFileSave = () => {
-    if (fileData && selectedStatus) {
-      const updatedLoans = loans.map((loan) =>
-        loan.loanId === selectedLoanId
-          ? { ...loan, status: selectedStatus }
-          : loan
-      );
-      setLoans(updatedLoans);
-
-      const storedLoans = localStorage.getItem(StorageItemNameEnum.LOANS);
-      if (storedLoans) {
-        const updatedStoredLoans = JSON.parse(storedLoans).map((loan) =>
-          loan.loanId === selectedLoanId
-            ? { ...loan, status: selectedStatus }
-            : loan
-        );
-
-        localStorage.setItem(
-          StorageItemNameEnum.LOANS,
-          JSON.stringify(updatedStoredLoans)
-        );
-      }
-
-      const storedFiles = JSON.parse(
-        localStorage.getItem(StorageItemNameEnum.LOAN_FILES) || "[]"
-      );
-
-      if (storedFiles) {
-        storedFiles.map((file) => (file.loanId === selectedLoanId ? {} : file));
-        storedFiles.push({ loanId: selectedLoanId, data: fileData });
-      }
-
-      localStorage.setItem(
-        StorageItemNameEnum.LOAN_FILES,
-        JSON.stringify(storedFiles)
-      );
-
-      handleUploadClose();
-    } else {
-      alert("Please select a status and upload a file!");
-    }
+    alert("Please select a status and upload a file!");
   };
 
   const handleFileDownload = (loanId) => {
@@ -176,28 +131,8 @@ const Loans = () => {
     }
   };
 
-  function findUsername(iabsId) {
-    const user = regionUsers.find((user) => user.iabsId === iabsId);
-    return user?.name || "Nobody";
-  }
-
   const handleStatusChange = (loanId, newStatus) => {
-    const updatedLoans = loans.map((loan) =>
-      loan.loanId === loanId ? { ...loan, status: newStatus } : loan
-    );
-    setLoans(updatedLoans);
-
-    const storedLoans = localStorage.getItem(StorageItemNameEnum.LOANS);
-
-    if (storedLoans) {
-      const updatedLoans = JSON.parse(storedLoans).map((loan) =>
-        loan.loanId === loanId ? { ...loan, status: newStatus } : loan
-      );
-      localStorage.setItem(
-        StorageItemNameEnum.LOANS,
-        JSON.stringify(updatedLoans)
-      );
-    }
+    alert("Please select a status and upload a file!");
   };
 
   const handleCheckOpen = (loanId) => {
@@ -252,33 +187,33 @@ const Loans = () => {
       headerName: "Days left",
       flex: 0.3,
     },
-    {
-      field: "status",
-      headerName: "Status",
-      flex: 0.5,
-      valueGetter: (params) => {
-        if (
-          [
-            LoanStatusEnum.MAQSADLI,
-            LoanStatusEnum.MAQSADSIZ,
-            LoanStatusEnum.QISMAN_MAQSADLI,
-            LoanStatusEnum.QISMAN_MAQSADSIZ,
-          ].includes(params.value) &&
-          userInfo.role !== RoleEnum.REPUBLIC_EMPLOYEE
-        ) {
-          return "Tekshirilmoqda";
-        } else return params.value;
-      },
-    },
+    // {
+    //   field: "status",
+    //   headerName: "Status",
+    //   flex: 0.5,
+    //   valueGetter: (params) => {
+    //     if (
+    //       [
+    //         LoanStatusEnum.MAQSADLI,
+    //         LoanStatusEnum.MAQSADSIZ,
+    //         LoanStatusEnum.QISMAN_MAQSADLI,
+    //         LoanStatusEnum.QISMAN_MAQSADSIZ,
+    //       ].includes(params.value) &&
+    //       userInfo.role !== RoleEnum.REPUBLIC_EMPLOYEE
+    //     ) {
+    //       return "Tekshirilmoqda";
+    //     } else return params.value;
+    //   },
+    // },
     {
       field: "responsible",
       headerName: "Responsible person",
       flex: 0.5,
       renderCell: (params) => {
         if (params.value) {
-          return findUsername(params.value);
+          return params.value;
         }
-        if (RoleEnum.REGION_BOSS !== userInfo.role) {
+        if (RoleEnum.REGION_BOSS !== RoleEnum[meData.role]) {
           return "Nobody";
         } else {
           return (
@@ -304,212 +239,139 @@ const Loans = () => {
       headerName: "Control",
       flex: 0.5,
       renderCell: (params) => {
-        if (userInfo.role === RoleEnum.REPUBLIC_EMPLOYEE) {
-          if (
-            [
-              LoanStatusEnum.MAQSADLI,
-              LoanStatusEnum.MAQSADSIZ,
-              LoanStatusEnum.QISMAN_MAQSADLI,
-              LoanStatusEnum.QISMAN_MAQSADSIZ,
-            ].includes(params.row.status)
-          ) {
-            return (
-              <>
-                <Button
-                  variant="contained"
-                  sx={{
-                    backgroundColor: "#003366",
-                    color: "white",
-                    "&:hover": {
-                      backgroundColor: "#002244",
-                    },
-                  }}
-                  onClick={() => handleCheckOpen(params.row.loanId)}
-                >
-                  Tekshiruv
-                </Button>
-              </>
-            );
-          } else if (
-            [LoanStatusEnum.SUCCESS, LoanStatusEnum.CANCELLED].includes(
-              params.row.status
-            )
-          ) {
-            return "Tekshirilgan";
-          } else {
-            return "Tekshirishga tayyor emas";
-          }
-        } else if (userInfo.role === RoleEnum.REGION_EMPLOYEE) {
-          if (params.row.status === LoanStatusEnum.PENDING) {
-            return (
-              <Button
-                variant="contained"
-                sx={{
-                  backgroundColor: "#003366",
-                  color: "white",
-                  "&:hover": {
-                    backgroundColor: "#002244",
-                  },
-                }}
-                onClick={() => handleUploadOpen(params.row.loanId)}
-              >
-                Upload
-              </Button>
-            );
-          } else if (
-            [
-              LoanStatusEnum.MAQSADLI,
-              LoanStatusEnum.MAQSADSIZ,
-              LoanStatusEnum.QISMAN_MAQSADLI,
-              LoanStatusEnum.QISMAN_MAQSADSIZ,
-            ].includes(params.row.status)
-          ) {
-            return "Siz tekshira olmaysiz";
-          } else if (LoanStatusEnum.SUCCESS === params.row.status) {
-            return "Qabul qilindi";
-          } else if (LoanStatusEnum.CANCELLED === params.row.status) {
-            return "Qabul qilinmadi";
-          } else {
-            return "Muddati o'tdi";
-          }
-        } else if (userInfo.role === RoleEnum.REGION_BOSS) {
-          if (
-            params.row.responsible === userInfo.iabsId &&
-            params.row.status === LoanStatusEnum.PENDING
-          ) {
-            return (
-              <Button
-                variant="contained"
-                sx={{
-                  backgroundColor: "#003366",
-                  color: "white",
-                  "&:hover": {
-                    backgroundColor: "#002244",
-                  },
-                }}
-                onClick={() => handleUploadOpen(params.row.loanId)}
-              >
-                Upload
-              </Button>
-            );
-          } else if (
-            [
-              LoanStatusEnum.MAQSADLI,
-              LoanStatusEnum.MAQSADSIZ,
-              LoanStatusEnum.QISMAN_MAQSADLI,
-              LoanStatusEnum.QISMAN_MAQSADSIZ,
-            ].includes(params.row.status)
-          ) {
-            return "Siz tekshira olmaysiz";
-          } else if (LoanStatusEnum.SUCCESS === params.row.status) {
-            return "Qabul qilindi";
-          } else if (LoanStatusEnum.CANCELLED === params.row.status) {
-            return "Qabul qilinmadi";
-          } else if (LoanStatusEnum.OUTDATED === params.row.status) {
-            return "Muddati o'tdi";
-          } else if (
-            params.row.status === LoanStatusEnum.PENDING &&
-            !params.row.responsible
-          ) {
-            return "Biriktirilmoqda";
-          } else if (
-            params.row.status === LoanStatusEnum.PENDING &&
-            params.row.responsible
-          ) {
-            return "Biriktirilgan";
-          } else {
-            return "Siz tekshira olmaysiz";
-          }
-        } else {
-          return "You can't change";
-        }
+        // if (userInfo.role === RoleEnum.REPUBLIC_EMPLOYEE) {
+        //   if (
+        //     [
+        //       LoanStatusEnum.MAQSADLI,
+        //       LoanStatusEnum.MAQSADSIZ,
+        //       LoanStatusEnum.QISMAN_MAQSADLI,
+        //       LoanStatusEnum.QISMAN_MAQSADSIZ,
+        //     ].includes(params.row.status)
+        //   ) {
+        //     return (
+        //       <>
+        //         <Button
+        //           variant="contained"
+        //           sx={{
+        //             backgroundColor: "#003366",
+        //             color: "white",
+        //             "&:hover": {
+        //               backgroundColor: "#002244",
+        //             },
+        //           }}
+        //           onClick={() => handleCheckOpen(params.row.loanId)}
+        //         >
+        //           Tekshiruv
+        //         </Button>
+        //       </>
+        //     );
+        //   } else if (
+        //     [LoanStatusEnum.SUCCESS, LoanStatusEnum.CANCELLED].includes(
+        //       params.row.status
+        //     )
+        //   ) {
+        //     return "Tekshirilgan";
+        //   } else {
+        //     return "Tekshirishga tayyor emas";
+        //   }
+        // } else if (userInfo.role === RoleEnum.REGION_EMPLOYEE) {
+        //   if (params.row.status === LoanStatusEnum.PENDING) {
+        //     return (
+        //       <Button
+        //         variant="contained"
+        //         sx={{
+        //           backgroundColor: "#003366",
+        //           color: "white",
+        //           "&:hover": {
+        //             backgroundColor: "#002244",
+        //           },
+        //         }}
+        //         onClick={() => handleUploadOpen(params.row.loanId)}
+        //       >
+        //         Upload
+        //       </Button>
+        //     );
+        //   } else if (
+        //     [
+        //       LoanStatusEnum.MAQSADLI,
+        //       LoanStatusEnum.MAQSADSIZ,
+        //       LoanStatusEnum.QISMAN_MAQSADLI,
+        //       LoanStatusEnum.QISMAN_MAQSADSIZ,
+        //     ].includes(params.row.status)
+        //   ) {
+        //     return "Siz tekshira olmaysiz";
+        //   } else if (LoanStatusEnum.SUCCESS === params.row.status) {
+        //     return "Qabul qilindi";
+        //   } else if (LoanStatusEnum.CANCELLED === params.row.status) {
+        //     return "Qabul qilinmadi";
+        //   } else {
+        //     return "Muddati o'tdi";
+        //   }
+        // } else if (userInfo.role === RoleEnum.REGION_BOSS) {
+        //   if (
+        //     params.row.responsible === userInfo.iabsId &&
+        //     params.row.status === LoanStatusEnum.PENDING
+        //   ) {
+        //     return (
+        //       <Button
+        //         variant="contained"
+        //         sx={{
+        //           backgroundColor: "#003366",
+        //           color: "white",
+        //           "&:hover": {
+        //             backgroundColor: "#002244",
+        //           },
+        //         }}
+        //         onClick={() => handleUploadOpen(params.row.loanId)}
+        //       >
+        //         Upload
+        //       </Button>
+        //     );
+        //   } else if (
+        //     [
+        //       LoanStatusEnum.MAQSADLI,
+        //       LoanStatusEnum.MAQSADSIZ,
+        //       LoanStatusEnum.QISMAN_MAQSADLI,
+        //       LoanStatusEnum.QISMAN_MAQSADSIZ,
+        //     ].includes(params.row.status)
+        //   ) {
+        //     return "Siz tekshira olmaysiz";
+        //   } else if (LoanStatusEnum.SUCCESS === params.row.status) {
+        //     return "Qabul qilindi";
+        //   } else if (LoanStatusEnum.CANCELLED === params.row.status) {
+        //     return "Qabul qilinmadi";
+        //   } else if (LoanStatusEnum.OUTDATED === params.row.status) {
+        //     return "Muddati o'tdi";
+        //   } else if (
+        //     params.row.status === LoanStatusEnum.PENDING &&
+        //     !params.row.responsible
+        //   ) {
+        //     return "Biriktirilmoqda";
+        //   } else if (
+        //     params.row.status === LoanStatusEnum.PENDING &&
+        //     params.row.responsible
+        //   ) {
+        //     return "Biriktirilgan";
+        //   } else {
+        //     return "Siz tekshira olmaysiz";
+        //   }
+        // } else {
+        //   return "You can't change";
+        // }
       },
     },
   ];
 
   useEffect(() => {
-    const fetchData = async (storedUserInfo) => {
-      let storedLoan = localStorage.getItem(StorageItemNameEnum.LOANS);
-      let myLoans = [];
-
-      if (storedLoan) {
-        storedLoan = JSON.parse(storedLoan);
-      } else {
-        const response = await fetch("./loan.xlsx");
-        const arrayBuffer = await response.arrayBuffer();
-        const workbook = xlsx.read(new Uint8Array(arrayBuffer), {
-          type: "array",
-        });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const jsonData = xlsx.utils.sheet_to_json(worksheet, { header: 1 });
-
-        storedLoan = jsonData.map((data, index) => ({
-          id: index,
-          loanId: data[22],
-          dateLoan: formatDate(data[8]),
-          dateDiff: calculateDaysLeft(data[8]),
-          clientname: data[3],
-          region: data[0],
-          status:
-            calculateDaysLeft(data[8]) > 0
-              ? LoanStatusEnum.PENDING
-              : LoanStatusEnum.OUTDATED,
-          responsible: null, // Assuming responsible person's name is in column 23 (adjust if needed)
-        }));
-
-        storedLoan.shift(); // Remove header row if present
-        localStorage.setItem(
-          StorageItemNameEnum.LOANS,
-          JSON.stringify(storedLoan)
-        );
-      }
-
-      if (storedUserInfo.role === RoleEnum.ADMIN) {
-        myLoans = storedLoan;
-      } else if (
-        storedUserInfo.role === RoleEnum.REPUBLIC_EMPLOYEE ||
-        storedUserInfo.role === RoleEnum.REGION_BOSS
-      ) {
-        myLoans = storedLoan.filter(
-          (loan) => loan.region === storedUserInfo.region
-        );
-      } else if (storedUserInfo.role === RoleEnum.REGION_EMPLOYEE) {
-        myLoans = storedLoan.filter(
-          (loan) => loan.responsible === storedUserInfo.iabsId
-        );
-      }
-
-      setLoans(myLoans);
-    };
-
-    const storedUserInfo = JSON.parse(
-      localStorage.getItem(StorageItemNameEnum.USER_INFO)
-    );
-    if (storedUserInfo) {
-      setUserInfo(storedUserInfo);
-
-      const storedUsers = JSON.parse(
-        localStorage.getItem(StorageItemNameEnum.USERS)
-      );
-      if (storedUsers) {
-        const usersInRegion = storedUsers.filter(
-          (user) =>
-            user.region === storedUserInfo.region &&
-            user.role !== RoleEnum.REPUBLIC_EMPLOYEE
-        );
-        setRegionUsers(usersInRegion);
-      }
+    const accessToken = getCookie("accessToken");
+    const refreshToken = getCookie("refreshToken");
+    if (!accessToken || !refreshToken) {
+      navigate("/login");
     }
-
-    (async () => {
-      try {
-        await fetchData(storedUserInfo);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    })();
-  }, []);
+    if (!meData) {
+      refetch();
+    }
+  }, [navigate, meData, refetch]);
 
   return (
     <Box m="1.5rem 2.5rem">
@@ -570,9 +432,9 @@ const Loans = () => {
         }}
       >
         <DataGrid
-          loading={false || !loans.length}
+          loading={false || !loansData.length}
           getRowId={(row) => row.id}
-          rows={loans || []}
+          rows={loansData || []}
           columns={columns}
           components={{
             ColumnMenu: CustomColumnMenu,
@@ -625,9 +487,9 @@ const Loans = () => {
               <MenuItem value="" disabled>
                 Select user
               </MenuItem>
-              {regionUsers.map((user) => (
-                <MenuItem key={user.iabsId} value={user.iabsId}>
-                  {user.name}
+              {adminsData.map((admin) => (
+                <MenuItem key={admin.id} value={admin.id}>
+                  {admin.name}
                 </MenuItem>
               ))}
             </Select>
