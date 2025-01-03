@@ -38,6 +38,7 @@ const Admin = () => {
     username: "",
     role: "",
     region: "",
+    bhmCode: "",
     password: "",
   });
 
@@ -141,6 +142,7 @@ const Admin = () => {
       username: "",
       password: "",
       role: "",
+      bhmCode: "",
       region: "",
     });
   };
@@ -292,21 +294,23 @@ const Admin = () => {
               style: { color: "#003366", border: "1px solid #003366" },
             }}
           />
-          <TextField
-            margin="dense"
-            name="password"
-            label="Password"
-            type="password"
-            fullWidth
-            value={newAdmin.password}
-            onChange={handleChange}
-            InputLabelProps={{
-              style: { color: "#003366" },
-            }}
-            InputProps={{
-              style: { color: "#003366", border: "1px solid #003366" },
-            }}
-          />
+          {!editMode && (
+            <TextField
+              margin="dense"
+              name="password"
+              label="Password"
+              type="password"
+              fullWidth
+              value={newAdmin.password}
+              onChange={handleChange}
+              InputLabelProps={{
+                style: { color: "#003366" },
+              }}
+              InputProps={{
+                style: { color: "#003366", border: "1px solid #003366" },
+              }}
+            />
+          )}
           <FormControl fullWidth margin="dense">
             <InputLabel sx={{ color: "#003366" }}>Role</InputLabel>
             <Select
@@ -323,22 +327,46 @@ const Admin = () => {
               ))}
             </Select>
           </FormControl>
-          <FormControl fullWidth margin="dense">
-            <InputLabel sx={{ color: "#003366" }}>Region</InputLabel>
-            <Select
-              name="region"
-              value={newAdmin.region}
-              onChange={handleChange}
-              displayEmpty
-              sx={{ color: "#003366", border: "1px solid #003366" }}
-            >
-              {regions.map((region) => (
-                <MenuItem key={region.id} value={region.id}>
-                  {region.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          {RoleEnum[newAdmin.role] !== RoleEnum.REPUBLIC_BOSS &&
+            newAdmin.role && (
+              <FormControl fullWidth margin="dense">
+                <InputLabel style={{ color: "#003366" }}>Region</InputLabel>
+                <Select
+                  name="region"
+                  value={newAdmin.region}
+                  onChange={handleChange}
+                  style={{
+                    color: "#003366",
+                    border: "1px solid #003366",
+                  }}
+                >
+                  {regions.map((region) => (
+                    <MenuItem key={region.id} value={region.id}>
+                      {region.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            )}
+          {RoleEnum[newAdmin.role] === RoleEnum.REGION_CHECKER_EMPLOYEE &&
+            newAdmin.role && (
+              <TextField
+                margin="dense"
+                name="bhmCode"
+                label="BHM Code"
+                type="text"
+                fullWidth
+                value={newAdmin.bhmCode}
+                onChange={handleChange}
+                InputLabelProps={{ style: { color: "#003366" } }}
+                InputProps={{
+                  style: {
+                    color: "#003366",
+                    border: "1px solid #003366",
+                  },
+                }}
+              />
+            )}
         </DialogContent>
         <DialogActions sx={{ backgroundColor: "white" }}>
           <Button onClick={handleClose} sx={{ color: "#003366" }}>

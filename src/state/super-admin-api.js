@@ -34,7 +34,6 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
     baseUrl: process.env.REACT_APP_BASE_URL,
     prepareHeaders: (headers) => {
       const accessToken = getAccessTokenFromCookie();
-      console.log(123, accessToken);
       if (accessToken) {
         headers.set("authorization", `Bearer ${accessToken}`);
       }

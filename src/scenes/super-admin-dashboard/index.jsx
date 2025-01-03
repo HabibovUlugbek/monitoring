@@ -47,6 +47,7 @@ const SuperAdminDashboard = () => {
     name: "",
     region: "",
     role: "",
+    bhmCode: "",
     password: "",
   });
   const [formErrors, setFormErrors] = useState({});
@@ -82,7 +83,8 @@ const SuperAdminDashboard = () => {
       name: admin.name,
       region: admin.region,
       role: admin.role,
-      password: "",
+      bhmCode: admin.bhmCode || undefined,
+      password: undefined,
     });
     setIsDialogOpen(true);
   };
@@ -94,6 +96,7 @@ const SuperAdminDashboard = () => {
       name: "",
       region: "",
       role: "",
+      bhmCode: "",
       password: "",
     });
     setIsDialogOpen(true);
@@ -137,6 +140,8 @@ const SuperAdminDashboard = () => {
 
     navigate("/login");
   };
+
+  console.log(formValues);
 
   return (
     <Container
@@ -317,9 +322,7 @@ const SuperAdminDashboard = () => {
                   onChange={handleChange}
                   error={!!formErrors.name}
                   helperText={formErrors.name}
-                  InputLabelProps={{
-                    style: { color: "#003366" },
-                  }}
+                  InputLabelProps={{ style: { color: "#003366" } }}
                   InputProps={{
                     style: { color: "#003366", border: "1px solid #003366" },
                   }}
@@ -335,30 +338,28 @@ const SuperAdminDashboard = () => {
                   onChange={handleChange}
                   error={!!formErrors.username}
                   helperText={formErrors.username}
-                  InputLabelProps={{
-                    style: { color: "#003366" },
-                  }}
+                  InputLabelProps={{ style: { color: "#003366" } }}
                   InputProps={{
                     style: { color: "#003366", border: "1px solid #003366" },
                   }}
                 />
-                <TextField
-                  margin="dense"
-                  name="password"
-                  label="Password"
-                  type="password"
-                  fullWidth
-                  value={formValues.password}
-                  onChange={handleChange}
-                  error={!!formErrors.password}
-                  helperText={formErrors.password}
-                  InputLabelProps={{
-                    style: { color: "#003366" },
-                  }}
-                  InputProps={{
-                    style: { color: "#003366", border: "1px solid #003366" },
-                  }}
-                />
+                {!editingAdmin && (
+                  <TextField
+                    margin="dense"
+                    name="password"
+                    label="Password"
+                    type="password"
+                    fullWidth
+                    value={formValues.password}
+                    onChange={handleChange}
+                    error={!!formErrors.password}
+                    helperText={formErrors.password}
+                    InputLabelProps={{ style: { color: "#003366" } }}
+                    InputProps={{
+                      style: { color: "#003366", border: "1px solid #003366" },
+                    }}
+                  />
+                )}
                 <FormControl fullWidth margin="dense" error={!!formErrors.role}>
                   <InputLabel style={{ color: "#003366" }}>Role</InputLabel>
                   <Select
@@ -379,21 +380,51 @@ const SuperAdminDashboard = () => {
                     </Typography>
                   )}
                 </FormControl>
-                <FormControl fullWidth margin="dense">
-                  <InputLabel style={{ color: "#003366" }}>Region</InputLabel>
-                  <Select
-                    name="region"
-                    value={formValues.region}
-                    onChange={handleChange}
-                    style={{ color: "#003366", border: "1px solid #003366" }}
-                  >
-                    {regions.map((region) => (
-                      <MenuItem key={region.id} value={region.id}>
-                        {region.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                {RoleEnum[formValues.role] !== RoleEnum.REPUBLIC_BOSS &&
+                  formValues.role && (
+                    <FormControl fullWidth margin="dense">
+                      <InputLabel style={{ color: "#003366" }}>
+                        Region
+                      </InputLabel>
+                      <Select
+                        name="region"
+                        value={formValues.region}
+                        onChange={handleChange}
+                        style={{
+                          color: "#003366",
+                          border: "1px solid #003366",
+                        }}
+                      >
+                        {regions.map((region) => (
+                          <MenuItem key={region.id} value={region.id}>
+                            {region.name}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  )}
+                {RoleEnum[formValues.role] ===
+                  RoleEnum.REGION_CHECKER_EMPLOYEE &&
+                  formValues.role && (
+                    <TextField
+                      margin="dense"
+                      name="bhmCode"
+                      label="BHM Code"
+                      type="text"
+                      fullWidth
+                      value={formValues.bhmCode}
+                      onChange={handleChange}
+                      error={!!formErrors.bhmCode}
+                      helperText={formErrors.bhmCode}
+                      InputLabelProps={{ style: { color: "#003366" } }}
+                      InputProps={{
+                        style: {
+                          color: "#003366",
+                          border: "1px solid #003366",
+                        },
+                      }}
+                    />
+                  )}
               </DialogContent>
               <DialogActions sx={{ backgroundColor: "white" }}>
                 <Button onClick={handleCancel} sx={{ color: "#003366" }}>

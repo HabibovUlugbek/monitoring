@@ -92,6 +92,13 @@ export const api = createApi({
       query: () => "admin",
       providesTags: ["Admin"],
     }),
+    getAdminStats: build.query({
+      query: (query) => ({
+        url: "admin/stats",
+        params: query,
+      }),
+      providesTags: ["Admin"],
+    }),
     getMe: build.query({
       query: () => "admin/me",
       providesTags: ["Admin"],
@@ -123,6 +130,20 @@ export const api = createApi({
       }),
       invalidatesTags: ["Loan"],
     }),
+    approveLoan: build.mutation({
+      query: (id) => ({
+        url: `loan/approve/${id}`,
+        method: "POST",
+      }),
+      invalidatesTags: ["Loan"],
+    }),
+    rejectLoan: build.mutation({
+      query: (id) => ({
+        url: `loan/reject/${id}`,
+        method: "POST",
+      }),
+      invalidatesTags: ["Loan"],
+    }),
   }),
 });
 
@@ -139,4 +160,7 @@ export const {
   useGetLoansQuery,
   useGetLoanQuery,
   useAssignLoanMutation,
+  useGetAdminStatsQuery,
+  useApproveLoanMutation,
+  useRejectLoanMutation,
 } = api;

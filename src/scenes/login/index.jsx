@@ -32,7 +32,7 @@ const LoginPage = () => {
 
   const navigateUsersByRole = useCallback(() => {
     if (!meData) refetch();
-    switch (RoleEnum[meData.role]) {
+    switch (RoleEnum[meData?.role]) {
       case RoleEnum.REPUBLIC_EMPLOYEE:
       case RoleEnum.REPUBLIC_BOSS:
         navigate("/dashboard");
