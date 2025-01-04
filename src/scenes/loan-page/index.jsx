@@ -149,6 +149,7 @@ const LoanDetailsPage = () => {
               <Box width="100%">
                 {loanInfo.messages.map((msg, index) => {
                   const isMe = msg.admin.id === meData?.id;
+                  const isFileMessage = msg.message.includes("File uploaded:");
                   return (
                     <Box
                       key={index}
@@ -167,19 +168,56 @@ const LoanDetailsPage = () => {
                           maxWidth: "70%",
                         }}
                       >
-                        <Typography sx={{ fontFamily: "Arial, sans-serif" }}>
-                          {msg.message}
-                        </Typography>
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            fontSize: "0.75rem",
-                            fontFamily: "Arial, sans-serif",
-                          }}
-                        >
-                          {msg.admin.name} -{" "}
-                          {new Date(msg.createdAt).toLocaleString()}
-                        </Typography>
+                        {isFileMessage ? (
+                          <>
+                            <Typography
+                              sx={{ fontFamily: "Arial, sans-serif" }}
+                            >
+                              {"Yuklangan file"}
+                            </Typography>
+                            <Button
+                              variant="outlined"
+                              color="primary"
+                              href={msg.message.split("File uploaded: ")[1]}
+                              target="_blank"
+                              sx={{
+                                backgroundColor: "#003366",
+                                "&:hover": { backgroundColor: "#002244" },
+                              }}
+                            >
+                              Download File
+                            </Button>
+
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                fontSize: "0.75rem",
+                                fontFamily: "Arial, sans-serif",
+                              }}
+                            >
+                              {msg.admin.name} -{" "}
+                              {new Date(msg.createdAt).toLocaleString()}
+                            </Typography>
+                          </>
+                        ) : (
+                          <>
+                            <Typography
+                              sx={{ fontFamily: "Arial, sans-serif" }}
+                            >
+                              {msg.message}
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                fontSize: "0.75rem",
+                                fontFamily: "Arial, sans-serif",
+                              }}
+                            >
+                              {msg.admin.name} -{" "}
+                              {new Date(msg.createdAt).toLocaleString()}
+                            </Typography>
+                          </>
+                        )}
                       </Box>
                     </Box>
                   );

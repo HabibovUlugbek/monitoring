@@ -1,7 +1,5 @@
 import React, { useState } from "react";
 import {
-  LightModeOutlined,
-  DarkModeOutlined,
   Menu as MenuIcon,
   Search,
   ArrowDropDownOutlined,
@@ -9,8 +7,6 @@ import {
   NotificationsOutlined, // Import the notifications icon
 } from "@mui/icons-material";
 import FlexBetween from "components/FlexBetween";
-import { useDispatch } from "react-redux";
-import { setMode } from "state";
 import {
   AppBar,
   Button,
@@ -36,7 +32,6 @@ import {
 } from "state/api";
 
 const Navbar = ({ user, isSidebarOpen, setIsSidebarOpen }) => {
-  const dispatch = useDispatch();
   const theme = useTheme();
   const navigate = useNavigate();
 
@@ -106,14 +101,6 @@ const Navbar = ({ user, isSidebarOpen, setIsSidebarOpen }) => {
 
         {/* RIGHT SIDE */}
         <FlexBetween gap="1.5rem">
-          <IconButton onClick={() => dispatch(setMode())}>
-            {theme.palette.mode === "dark" ? (
-              <DarkModeOutlined sx={{ fontSize: "25px", color: "#003366" }} />
-            ) : (
-              <LightModeOutlined sx={{ fontSize: "25px", color: "#003366" }} />
-            )}
-          </IconButton>
-
           <IconButton onClick={handleNotificationsClick}>
             <Badge badgeContent={notifications?.length} color="error">
               <NotificationsOutlined

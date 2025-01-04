@@ -16,7 +16,7 @@ import {
 import { DataGrid } from "@mui/x-data-grid";
 import Header from "components/Header";
 import CustomColumnMenu from "components/DataGridCustomColumnMenu";
-import { LoanStatusEnum, regions, RoleEnum } from "constants.js";
+import { regions, RoleEnum } from "constants.js";
 import { useNavigate } from "react-router-dom";
 import {
   useGetLoansQuery,
@@ -25,6 +25,7 @@ import {
   useGetMeQuery,
   useApproveLoanMutation,
   useRejectLoanMutation,
+  useUploadFileMutation,
 } from "state/api";
 import { getCookie } from "helper";
 
@@ -38,14 +39,13 @@ const Loans = () => {
   const [assignLoan] = useAssignLoanMutation();
   const [approveLoan] = useApproveLoanMutation();
   const [rejectLoan] = useRejectLoanMutation();
+  const [uploadFile] = useUploadFileMutation();
 
   const [selectedLoanId, setSelectedLoanId] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
 
   const [open, setOpen] = useState(false);
-  const [checkOpen, setCheckOpen] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState("");
   const [selectedFileName, setSelectedFileName] = useState("");
 
   const formatDate = (date) => {
@@ -68,15 +68,14 @@ const Loans = () => {
     setSelectedUser(null);
   };
 
-  const handleAssignUser = (id) => {
-    assignLoan({ loanId: selectedLoanId, userId: selectedUser.id });
+  const handleAssignUser = () => {
+    assignLoan({ loanId: selectedLoanId, userId: selectedUser });
     handleClose();
   };
 
   const handleUploadClose = () => {
     setUploadOpen(false);
     setSelectedLoanId(null);
-    setSelectedStatus("");
     setSelectedFileName("");
   };
 
@@ -135,7 +134,7 @@ const Loans = () => {
       flex: 0.5,
       renderCell: (params) => {
         const isResponsible = params.row?.history[0]?.assigneeId === meData?.id;
-        if (RoleEnum.REGION_BOSS === RoleEnum[meData.role] && isResponsible) {
+        if (RoleEnum.REGION_BOSS === RoleEnum[meData?.role] && isResponsible) {
           return (
             <Button
               variant="contained"
@@ -152,17 +151,35 @@ const Loans = () => {
             </Button>
           );
         } else if (
-          RoleEnum.REGION_EMPLOYEE === RoleEnum[meData.role] &&
+          RoleEnum.REGION_EMPLOYEE === RoleEnum[meData?.role] &&
           isResponsible
         ) {
-        } else if (RoleEnum.REPUBLIC_BOSS === RoleEnum[meData.role]) {
+          return (
+            <Button
+              variant="contained"
+              sx={{
+                backgroundColor: "#003366",
+                color: "white",
+                "&:hover": {
+                  backgroundColor: "#002244",
+                },
+              }}
+              onClick={() => {
+                setUploadOpen(true);
+                setSelectedLoanId(params.row?.id);
+              }}
+            >
+              Ma'lumot yuklash
+            </Button>
+          );
+        } else if (RoleEnum.REPUBLIC_BOSS === RoleEnum[meData?.role]) {
           return "Sizda huquq yo'q";
         } else if (
           [
             RoleEnum.REPUBLIC_EMPLOYEE,
             RoleEnum.REGION_CHECKER_EMPLOYEE,
             RoleEnum.REGION_CHECKER_BOSS,
-          ].includes(RoleEnum[meData.role] && isResponsible)
+          ].includes(RoleEnum[meData?.role] && isResponsible)
         ) {
           return (
             <>
@@ -212,6 +229,28 @@ const Loans = () => {
       refetch();
     }
   }, [navigate, meData, refetch]);
+
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setSelectedFileName(file.name);
+    }
+  };
+
+  const handleFileSave = () => {
+    const fileInput = document.getElementById("file-upload");
+    const file = fileInput.files[0];
+    if (file) {
+      const formData = new FormData();
+      formData.append("file", file, file.name);
+
+      uploadFile({ loanId: selectedLoanId, formData });
+
+      setSelectedLoanId(null);
+
+      handleUploadClose();
+    }
+  };
 
   return (
     <Box m="1.5rem 2.5rem">
@@ -378,23 +417,6 @@ const Loans = () => {
         <DialogContent
           sx={{ backgroundColor: "white", color: "#003366", padding: "2rem" }}
         >
-          <FormControl fullWidth margin="dense">
-            <InputLabel sx={{ color: "#003366" }}>Status</InputLabel>
-            <Select
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              sx={{ color: "#003366" }}
-            >
-              <MenuItem value={LoanStatusEnum.MAQSADLI}>Maqsadli</MenuItem>
-              <MenuItem value={LoanStatusEnum.MAQSADSIZ}>Maqsadsiz</MenuItem>
-              <MenuItem value={LoanStatusEnum.QISMAN_MAQSADLI}>
-                Qisman Maqsadli
-              </MenuItem>
-              <MenuItem value={LoanStatusEnum.QISMAN_MAQSADSIZ}>
-                Qisman Maqsadsiz
-              </MenuItem>
-            </Select>
-          </FormControl>
           <label
             htmlFor="file-upload"
             style={{ display: "block", marginTop: "20px" }}
@@ -403,7 +425,7 @@ const Loans = () => {
               id="file-upload"
               type="file"
               accept="application/pdf"
-              // onChange={}
+              onChange={handleFileChange}
               style={{ display: "none" }}
             />
             <Button
@@ -437,7 +459,7 @@ const Loans = () => {
             Cancel
           </Button>
           <Button
-            // onClick={handleFileSave}
+            onClick={handleFileSave}
             variant="contained"
             sx={{
               backgroundColor: "#003366",
@@ -448,76 +470,6 @@ const Loans = () => {
             Save
           </Button>
         </DialogActions>
-      </Dialog>
-
-      {/* Modal for "Tekshiruv" */}
-      <Dialog
-        open={checkOpen}
-        // onClose={handleCheckClose}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{
-          sx: {
-            backgroundColor: "white",
-          },
-        }}
-      >
-        <DialogTitle
-          sx={{
-            backgroundColor: "#003366",
-            color: "white",
-            textAlign: "center",
-          }}
-        >{`Tekshiruv for loan ${selectedLoanId}`}</DialogTitle>
-        <DialogContent
-          sx={{
-            margin: "2rem",
-            backgroundColor: "white",
-            textAlign: "center",
-            display: "flex",
-
-            justifyContent: "space-between",
-          }}
-        >
-          <>
-            <Button
-              variant="contained"
-              sx={{
-                backgroundColor: "#003366",
-                color: "white",
-                "&:hover": {
-                  backgroundColor: "#002244",
-                },
-                mr: 1,
-              }}
-              // onClick={() => handleCheckAction("Download")}
-            >
-              Download
-            </Button>
-            <Button
-              variant="contained"
-              sx={{
-                backgroundColor: "green",
-                color: "white",
-
-                mr: 1,
-              }}
-              // onClick={() => handleCheckAction("Success")}
-            >
-              Success
-            </Button>
-            <Button
-              variant="contained"
-              sx={{
-                backgroundColor: "red",
-                color: "white",
-              }}
-              // onClick={() => handleCheckAction("Cancel")}
-            >
-              Cancel
-            </Button>
-          </>
-        </DialogContent>
       </Dialog>
     </Box>
   );

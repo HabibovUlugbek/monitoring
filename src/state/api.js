@@ -175,6 +175,21 @@ export const api = createApi({
       }),
       invalidatesTags: ["Notification"],
     }),
+
+    uploadFile: build.mutation({
+      query: ({ loanId, formData }) => {
+        return {
+          url: `loan/${loanId}/upload`,
+          method: "POST",
+          body: formData,
+        };
+      },
+      invalidatesTags: ["Notification"],
+    }),
+    getFile: build.query({
+      query: (fileName) => `loan/file/${fileName}`,
+      providesTags: ["Notification"],
+    }),
   }),
 });
 
@@ -196,4 +211,6 @@ export const {
   useRejectLoanMutation,
   useGetLoanStatsQuery,
   useSendMessageMutation,
+  useUploadFileMutation,
+  useGetFileQuery,
 } = api;
