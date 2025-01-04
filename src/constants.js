@@ -25,63 +25,70 @@ const StorageItemNameEnum = {
   LOANS: "loans",
   LOAN_FILES: "loanFiles",
 };
-
 const regions = [
   {
-    id: "03",
+    id: "02",
     name: "Andijon",
   },
   {
-    id: "26",
-    name: "Tashkent",
+    id: "03",
+    name: "Buxoro",
   },
   {
-    id: "18",
-    name: "Samarkand",
+    id: "04",
+    name: "Jizzax",
+  },
+  {
+    id: "06",
+    name: "Qashqadaryo",
+  },
+  {
+    id: "05",
+    name: "Navoiy",
   },
   {
     id: "14",
     name: "Namangan",
   },
   {
-    id: "06",
-    name: "Buxoro",
-  },
-  {
-    id: "35",
-    name: "Qoraqalpog`iston Respublikasi",
-  },
-  {
-    id: "30",
-    name: "Fergana",
-  },
-  {
-    id: "24",
-    name: "Sirdaryo",
-  },
-  {
-    id: "08",
-    name: "Jizzax",
+    id: "18",
+    name: "Samarqand",
   },
   {
     id: "22",
     name: "Surxondaryo",
   },
   {
-    id: "12",
-    name: "Navoiy",
+    id: "24",
+    name: "Sirdaryo",
+  },
+  {
+    id: "10",
+    name: "MBRC",
+  },
+  {
+    id: "26",
+    name: "Toshkent shahar",
+  },
+  {
+    id: "77",
+    name: "Toshkent shahar",
+  },
+  {
+    id: "27",
+    name: "Toshkent viloyati",
+  },
+  {
+    id: "30",
+    name: "Farg‘ona",
   },
   {
     id: "33",
     name: "Xorazm",
   },
   {
-    id: "10",
-    name: "Qashqadaryo",
-  },
-  {
-    id: "27",
-    name: "Toshkent viloyati",
+    id: "35",
+    name: "Qoraqalpog‘iston Respublikasi",
   },
 ];
 
