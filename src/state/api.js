@@ -44,6 +44,23 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
   return handle401Error(args, api, extraOptions, baseQuery);
 };
 
+const createQueryString = ({ startDate, endDate, region }) => {
+  const queryParams = {
+    startDate,
+    endDate,
+    region,
+  };
+
+  Object.keys(queryParams).forEach((key) => {
+    if (!queryParams[key]) {
+      delete queryParams[key];
+    }
+  });
+
+  const queryString = new URLSearchParams(queryParams).toString();
+  return queryString;
+};
+
 export const api = createApi({
   baseQuery: baseQueryWithReauth,
   reducerPath: "adminApi",
@@ -94,8 +111,7 @@ export const api = createApi({
     }),
     getAdminStats: build.query({
       query: (query) => ({
-        url: "admin/stats",
-        params: query,
+        url: `admin/stats?${createQueryString(query)}`,
       }),
       providesTags: ["Admin"],
     }),
@@ -144,6 +160,21 @@ export const api = createApi({
       }),
       invalidatesTags: ["Loan"],
     }),
+    getLoanStats: build.query({
+      query: () => ({
+        url: `loan/stats`,
+        method: "POST",
+      }),
+      providesTags: ["Loan"],
+    }),
+    sendMessage: build.mutation({
+      query: (body) => ({
+        url: "loan/send/message",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Notification"],
+    }),
   }),
 });
 
@@ -163,4 +194,6 @@ export const {
   useGetAdminStatsQuery,
   useApproveLoanMutation,
   useRejectLoanMutation,
+  useGetLoanStatsQuery,
+  useSendMessageMutation,
 } = api;

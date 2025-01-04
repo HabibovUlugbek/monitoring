@@ -11,13 +11,20 @@ import {
   Paper,
 } from "@mui/material";
 
-import { useGetLoanQuery } from "state/api";
+import {
+  useGetLoanQuery,
+  useGetMeQuery,
+  useSendMessageMutation,
+} from "state/api";
+import { regions } from "constants";
 
 const LoanDetailsPage = () => {
   const { loanId } = useParams();
   const [loanInfo, setLoanInfo] = useState(null);
 
-  const { data, error, isLoading } = useGetLoanQuery(loanId);
+  const { data, error, isLoading, refetch } = useGetLoanQuery(loanId);
+  const { data: meData } = useGetMeQuery();
+  const [sendMessage] = useSendMessageMutation();
 
   const [newMessage, setNewMessage] = useState("");
 
@@ -25,34 +32,39 @@ const LoanDetailsPage = () => {
     if (data) {
       setLoanInfo(data);
     }
-    console.log(data);
   }, [data]);
 
   if (isLoading) return <Typography>Loading...</Typography>;
   if (error) return <Typography>Error loading loan details</Typography>;
 
   const handleSendMessage = async () => {
-    if (newMessage.trim()) {
-      const response = await fetch(`/api/loans/${loanId}/messages`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: newMessage }),
-      });
-
-      if (response.ok) {
-        const message = await response.json();
-        setNewMessage("");
-      }
-    }
+    await sendMessage({
+      loanId,
+      message: newMessage,
+    });
+    refetch();
   };
 
   return (
-    <Box display="flex" flexDirection={{ xs: "column", md: "row" }} p={2}>
+    <Box
+      display="flex"
+      flexDirection={{ xs: "column", md: "row" }}
+      p={2}
+      sx={{ backgroundColor: "#f0f0f0", minHeight: "100vh" }} // Grayish background
+    >
       {/* Left Section */}
       <Box flex={3} p={2}>
         {/* Loan Info */}
-        <Paper elevation={3} sx={{ p: 2, mb: 2 }}>
-          <Typography variant="h6" color="#003366">
+        <Paper
+          elevation={3}
+          sx={{
+            p: 2,
+            mb: 2,
+            backgroundColor: "#e0e0e0", // Lighter grayish background
+            color: "#003366", // Text color
+          }}
+        >
+          <Typography variant="h3" color="#003366">
             Loan Information
           </Typography>
           {loanInfo ? (
@@ -61,13 +73,21 @@ const LoanDetailsPage = () => {
                 <strong>ID:</strong> {loanInfo.id}
               </Typography>
               <Typography>
-                <strong>Status:</strong> {loanInfo.status}
+                <strong>Borrower:</strong> {loanInfo.borrower}
+              </Typography>
+              <Typography>
+                <strong>Region:</strong>{" "}
+                {
+                  regions.find((region) => region.id === loanInfo.codeRegion)
+                    ?.name
+                }
               </Typography>
               <Typography>
                 <strong>Amount:</strong> {loanInfo.amount}
               </Typography>
               <Typography>
-                <strong>Due Date:</strong> {loanInfo.dueDate}
+                <strong>Due Date:</strong>{" "}
+                {new Date(loanInfo.dueDate).toLocaleDateString()}
               </Typography>
             </Box>
           ) : (
@@ -76,14 +96,26 @@ const LoanDetailsPage = () => {
         </Paper>
 
         {/* History Section */}
-        <Paper elevation={3} sx={{ p: 2 }}>
-          <Typography variant="h6" color="#003366">
+        <Paper
+          elevation={3}
+          sx={{
+            p: 2,
+            backgroundColor: "#e0e0e0", // Lighter grayish background
+            color: "#003366", // Text color
+          }}
+        >
+          <Typography variant="h3" color="#003366">
             History
           </Typography>
           <List>
             {loanInfo?.history.map((data) => (
-              <ListItem key={data.id}>
-                <Typography>{data.status}</Typography>
+              <ListItem key={data.id} sx={{ borderBottom: "1px solid #ccc" }}>
+                <Box display="flex" flexDirection="column" width="100%">
+                  <Typography>
+                    {data.assignee.name} dagi vazifa {data.status} holatida.
+                    Sana: {new Date(data.date).toLocaleDateString()}
+                  </Typography>
+                </Box>
               </ListItem>
             ))}
           </List>
@@ -99,25 +131,67 @@ const LoanDetailsPage = () => {
             height: "100%",
             display: "flex",
             flexDirection: "column",
+            backgroundColor: "#e0e0e0", // Lighter grayish background
+            color: "#003366", // Text color
           }}
         >
-          <Typography variant="h6" color="#003366">
-            Chat
+          <Typography variant="h3" color="#003366">
+            Loan Chat
           </Typography>
-
-          {/* Messages */}
-          <Box flex={1} overflow="auto" mb={2}>
-            {loanInfo?.messages.map((msg, index) => (
-              <Box key={index} sx={{ mb: 1 }}>
-                <Typography variant="body2" color="textSecondary">
-                  {msg.sender}:
-                </Typography>
-                <Typography>{msg.content}</Typography>
+          <Box
+            flex={1}
+            overflow="auto"
+            mb={2}
+            display="flex"
+            flexDirection="column"
+          >
+            {loanInfo?.messages.length > 0 ? (
+              <Box width="100%">
+                {loanInfo.messages.map((msg, index) => {
+                  const isMe = msg.admin.id === meData?.id;
+                  return (
+                    <Box
+                      key={index}
+                      sx={{
+                        mb: 1,
+                        display: "flex",
+                        justifyContent: isMe ? "flex-end" : "flex-start",
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          p: 1,
+                          borderRadius: "4px",
+                          backgroundColor: isMe ? "#cce5ff" : "#003366",
+                          color: isMe ? "#003366" : "#ffffff",
+                          maxWidth: "70%",
+                        }}
+                      >
+                        <Typography sx={{ fontFamily: "Arial, sans-serif" }}>
+                          {msg.message}
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontSize: "0.75rem",
+                            fontFamily: "Arial, sans-serif",
+                          }}
+                        >
+                          {msg.admin.name} -{" "}
+                          {new Date(msg.createdAt).toLocaleString()}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  );
+                })}
               </Box>
-            ))}
+            ) : (
+              <Typography variant="body1" color="#003366">
+                No messages
+              </Typography>
+            )}
           </Box>
 
-          {/* Input Section */}
           <Divider sx={{ my: 2 }} />
           <Box display="flex">
             <TextField
@@ -125,13 +199,25 @@ const LoanDetailsPage = () => {
               placeholder="Type a message..."
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              sx={{ mr: 1 }}
+              sx={{
+                mr: 1,
+                backgroundColor: "#ffffff",
+                borderRadius: "4px",
+              }}
+              InputProps={{
+                style: {
+                  color: "#003366",
+                },
+              }}
             />
             <Button
-              variant="contained"
+              variant="outlined"
               color="primary"
               onClick={handleSendMessage}
-              sx={{ backgroundColor: "#003366" }}
+              sx={{
+                backgroundColor: "#003366",
+                "&:hover": { backgroundColor: "#002244" },
+              }}
             >
               Send
             </Button>

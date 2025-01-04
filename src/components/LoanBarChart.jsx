@@ -10,38 +10,12 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Box, Typography } from "@mui/material";
-import { LoanStatusEnum, regions, StorageItemNameEnum } from "constants.js";
-import * as xlsx from "xlsx";
+import { regions } from "constants.js";
 
-// Statuses for in-process and finished loans
-const inProcessStatuses = [
-  LoanStatusEnum.PENDING,
-  LoanStatusEnum.MAQSADLI,
-  LoanStatusEnum.MAQSADSIZ,
-  LoanStatusEnum.QISMAN_MAQSADLI,
-  LoanStatusEnum.QISMAN_MAQSADSIZ,
-];
-const finishedStatuses = [LoanStatusEnum.CANCELLED, LoanStatusEnum.SUCCESS];
-
-// Region codes for the loans
 const regionCodes = regions.reduce((acc, region) => {
   acc[region.id] = region.name;
   return acc;
 }, {});
-
-const formatDate = (excelSerialDate) => {
-  const dateObject = new Date((excelSerialDate - 25569) * 86400 * 1000);
-  return dateObject.toLocaleDateString("en-GB");
-};
-
-const calculateDaysLeft = (excelSerialDate) => {
-  const dateObject = new Date((excelSerialDate - 25569) * 86400 * 1000);
-  const currentDate = new Date();
-  const daysLeft = Math.floor(
-    (dateObject - currentDate) / (1000 * 60 * 60 * 24)
-  );
-  return daysLeft + 30;
-};
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -75,7 +49,7 @@ const CustomTooltip = ({ active, payload, label }) => {
           style={{
             color: "#ffc658",
           }}
-        >{`Finished: ${payload[2].value}`}</p>
+        >{`Approved: ${payload[2].value}`}</p>
       </div>
     );
   }
@@ -83,97 +57,24 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
-const LoanBarChart = () => {
+const LoanBarChart = ({ info }) => {
   const [loanData, setLoanData] = useState([]);
-  const [loading, setLoading] = useState(true); // To manage loading state
 
   useEffect(() => {
-    const fetchData = async () => {
-      let storedLoan = localStorage.getItem(StorageItemNameEnum.LOANS);
+    if (!info) return;
 
-      if (!storedLoan || JSON.parse(storedLoan).length === 0) {
-        // If no data in localStorage, fetch from Excel
-        const response = await fetch("./loan.xlsx");
-        const arrayBuffer = await response.arrayBuffer();
-        const workbook = xlsx.read(new Uint8Array(arrayBuffer), {
-          type: "array",
-        });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const jsonData = xlsx.utils.sheet_to_json(worksheet, { header: 1 });
+    const formattedData = info.map((reg) => ({
+      region: regionCodes[reg.region],
+      allLoans: reg.approved + reg.inProcess + reg.outdated + reg.rejected,
+      inProcess: reg.inProcess,
+      approved: reg.approved,
+    }));
 
-        // Map Excel data to loan structure
-        storedLoan = jsonData.map((data, index) => ({
-          id: index,
-          loanId: data[22],
-          dateLoan: formatDate(data[8]),
-          dateDiff: calculateDaysLeft(data[8]),
-          clientname: data[3],
-          region: data[0],
-          status:
-            calculateDaysLeft(data[8]) > 0
-              ? LoanStatusEnum.PENDING
-              : LoanStatusEnum.OUTDATED,
-          responsible: null, // Assuming responsible person's name is in column 23
-        }));
+    setLoanData(formattedData);
+  }, [info]);
 
-        storedLoan.shift(); // Remove header row if present
-        localStorage.setItem(
-          StorageItemNameEnum.LOANS,
-          JSON.stringify(storedLoan)
-        );
-      } else {
-        storedLoan = JSON.parse(storedLoan);
-      }
-
-      return storedLoan;
-    };
-
-    const processLoanData = (storedLoans) => {
-      const regionData = {};
-
-      // Initialize region data with zeros
-      Object.keys(regionCodes).forEach((code) => {
-        regionData[regionCodes[code]] = {
-          allLoans: 0,
-          inProcess: 0,
-          finished: 0,
-        };
-      });
-
-      // Process the loans and categorize them
-      storedLoans.forEach((loan) => {
-        const regionName = regionCodes[loan.region];
-        if (regionName) {
-          regionData[regionName].allLoans += 1;
-
-          if (inProcessStatuses.includes(loan.status)) {
-            regionData[regionName].inProcess += 1;
-          } else if (finishedStatuses.includes(loan.status)) {
-            regionData[regionName].finished += 1;
-          }
-        }
-      });
-
-      // Convert the regionData object into an array for the chart
-      const processedData = Object.keys(regionData).map((region) => ({
-        region,
-        allLoans: regionData[region].allLoans,
-        inProcess: regionData[region].inProcess,
-        finished: regionData[region].finished,
-      }));
-
-      setLoanData(processedData);
-      setLoading(false); // Data is loaded
-    };
-
-    fetchData().then((storedLoans) => {
-      processLoanData(storedLoans);
-    });
-  }, []);
-
-  if (loading) {
-    return <div>Loading data...</div>; // Display loading message while fetching data
+  if (!info) {
+    return <div style={{ color: "blue" }}>Loading data...</div>; // Display loading message while fetching data
   }
 
   return (
@@ -195,11 +96,11 @@ const LoanBarChart = () => {
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="region" />
           <YAxis />
-          <Tooltip content={<CustomTooltip />} /> {/* Add custom tooltip */}
+          <Tooltip content={<CustomTooltip />} />
           <Legend />
           <Bar dataKey="allLoans" fill="#8884d8" name="All Loans" />
           <Bar dataKey="inProcess" fill="#82ca9d" name="In Process" />
-          <Bar dataKey="finished" fill="#ffc658" name="Finished" />
+          <Bar dataKey="approved" fill="#ffc658" name="Approved" />
         </BarChart>
       </ResponsiveContainer>
     </Box>
