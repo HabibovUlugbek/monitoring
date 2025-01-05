@@ -70,7 +70,7 @@ const LoanDetailsPage = () => {
           {loanInfo ? (
             <Box>
               <Typography>
-                <strong>ID:</strong> {loanInfo.id}
+                <strong>ID:</strong> {loanInfo.externalId}
               </Typography>
               <Typography>
                 <strong>Borrower:</strong> {loanInfo.borrower}
