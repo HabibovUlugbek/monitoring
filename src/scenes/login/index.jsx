@@ -23,12 +23,18 @@ const LoginPage = () => {
     data: superAdminData,
     isSuccess: isSuperAdminSuccess,
     error: superAdminError,
-  } = useSignInSuperAdminQuery({ username, password }, { skip: !isSuperAdmin });
+  } = useSignInSuperAdminQuery(
+    { username, password },
+    { skip: !isSuperAdmin || !username || !password }
+  );
   const {
     data: adminData,
     isSuccess: isAdminSuccess,
     error: adminError,
-  } = useSignInAdminQuery({ username, password }, { skip: isSuperAdmin });
+  } = useSignInAdminQuery(
+    { username, password },
+    { skip: isSuperAdmin || !username || !password }
+  );
 
   const navigateUsersByRole = useCallback(() => {
     if (!meData) refetch();

@@ -403,8 +403,9 @@ const SuperAdminDashboard = () => {
                       </Select>
                     </FormControl>
                   )}
-                {RoleEnum[formValues.role] ===
-                  RoleEnum.REGION_CHECKER_EMPLOYEE &&
+                {(RoleEnum[formValues.role] ===
+                  RoleEnum.REGION_CHECKER_EMPLOYEE ||
+                  RoleEnum[formValues.role] === RoleEnum.REGION_EMPLOYEE) &&
                   formValues.role && (
                     <TextField
                       margin="dense"

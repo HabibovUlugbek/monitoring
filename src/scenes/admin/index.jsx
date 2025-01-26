@@ -348,7 +348,8 @@ const Admin = () => {
                 </Select>
               </FormControl>
             )}
-          {RoleEnum[newAdmin.role] === RoleEnum.REGION_CHECKER_EMPLOYEE &&
+          {(RoleEnum[newAdmin.role] === RoleEnum.REGION_CHECKER_EMPLOYEE ||
+            RoleEnum[newAdmin.role] === RoleEnum.REGION_EMPLOYEE) &&
             newAdmin.role && (
               <TextField
                 margin="dense"

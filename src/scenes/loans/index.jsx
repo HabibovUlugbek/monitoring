@@ -81,7 +81,7 @@ const Loans = () => {
 
   const columns = [
     {
-      field: "id",
+      field: "externalId",
       headerName: "Loan Id",
       flex: 0.5,
       renderCell: (params) => (
