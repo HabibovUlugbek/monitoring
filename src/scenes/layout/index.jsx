@@ -13,6 +13,10 @@ const Layout = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    refetch();
+  }, []);
+
+  useEffect(() => {
     const accessToken = getCookie("accessToken");
     if (!accessToken) {
       navigate("/login");

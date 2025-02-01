@@ -34,6 +34,7 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
     baseUrl: process.env.REACT_APP_BASE_URL,
     prepareHeaders: (headers) => {
       const accessToken = getAccessTokenFromCookie();
+      console.log(123, accessToken, api);
       if (accessToken) {
         headers.set("authorization", `Bearer ${accessToken}`);
       }
@@ -44,12 +45,12 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
   return handle401Error(args, api, extraOptions, baseQuery);
 };
 
-const createQueryString = ({ startDate, endDate, region }) => {
-  const queryParams = {
-    startDate,
-    endDate,
-    region,
-  };
+const createQueryString = (queryParams) => {
+  // const queryParams = {
+  //   startDate,
+  //   endDate,
+  //   region,
+  // };
 
   Object.keys(queryParams).forEach((key) => {
     if (!queryParams[key]) {
@@ -177,9 +178,9 @@ export const api = createApi({
     }),
 
     uploadFile: build.mutation({
-      query: ({ loanId, formData }) => {
+      query: ({ loanId, formData, query }) => {
         return {
-          url: `loan/${loanId}/upload`,
+          url: `loan/${loanId}/upload${createQueryString(query)}`,
           method: "POST",
           body: formData,
         };
@@ -189,6 +190,10 @@ export const api = createApi({
     getFile: build.query({
       query: (fileName) => `loan/file/${fileName}`,
       providesTags: ["Notification"],
+    }),
+    getLoanFiles: build.query({
+      query: (loanId) => `loan/${loanId}/files`,
+      providesTags: ["Loan"],
     }),
   }),
 });
@@ -213,4 +218,5 @@ export const {
   useSendMessageMutation,
   useUploadFileMutation,
   useGetFileQuery,
+  useGetLoanFilesQuery,
 } = api;

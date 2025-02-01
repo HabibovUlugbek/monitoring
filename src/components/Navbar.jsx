@@ -24,7 +24,7 @@ import {
   ListItemText,
 } from "@mui/material";
 import { RoleEnum } from "constants";
-import { deleteCookie } from "helper";
+import { deleteCookie, setCookie } from "helper";
 import { useNavigate } from "react-router-dom";
 import {
   useGetNotificationsQuery,
@@ -54,10 +54,18 @@ const Navbar = ({ user, isSidebarOpen, setIsSidebarOpen }) => {
   const handleNotificationsClose = () => setNotificationsAnchorEl(null);
 
   const handleLogout = () => {
+    setCookie("accessToken", "", -1);
+    setCookie("refreshToken", "", -1);
+    setCookie("super-accessToken", "", -1);
+    setCookie("super-refreshToken", "", -1);
     deleteCookie("accessToken");
     deleteCookie("refreshToken");
     handleClose();
     navigate("/login");
+
+    setTimeout(() => {
+      window.location.reload(); // Refresh to ensure correct user data is fetched
+    }, 100);
   };
 
   const handleMarkAsRead = (id) => {

@@ -9,21 +9,33 @@ import {
   List,
   ListItem,
   Paper,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
 } from "@mui/material";
 
 import {
   useGetLoanQuery,
   useGetMeQuery,
   useSendMessageMutation,
+  useGetLoanFilesQuery,
 } from "state/api";
 import { regions } from "constants";
 
 const LoanDetailsPage = () => {
   const { loanId } = useParams();
   const [loanInfo, setLoanInfo] = useState(null);
+  const [filesModalOpen, setFilesModalOpen] = useState(false);
 
   const { data, error, isLoading, refetch } = useGetLoanQuery(loanId);
   const { data: meData } = useGetMeQuery();
+  const { data: fileData } = useGetLoanFilesQuery(loanId);
   const [sendMessage] = useSendMessageMutation();
 
   const [newMessage, setNewMessage] = useState("");
@@ -43,6 +55,14 @@ const LoanDetailsPage = () => {
       message: newMessage,
     });
     refetch();
+  };
+
+  const handleOpenFilesModal = () => {
+    setFilesModalOpen(true);
+  };
+
+  const handleCloseFilesModal = () => {
+    setFilesModalOpen(false);
   };
 
   return (
@@ -135,9 +155,29 @@ const LoanDetailsPage = () => {
             color: "#003366", // Text color
           }}
         >
-          <Typography variant="h3" color="#003366">
-            Loan Chat
-          </Typography>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            mb={2}
+          >
+            <Typography variant="h3" color="#003366">
+              Loan Chat
+            </Typography>
+
+            <Button
+              variant="outlined"
+              color="primary"
+              onClick={handleOpenFilesModal}
+              sx={{
+                backgroundColor: "#003366",
+                "&:hover": { backgroundColor: "#002244" },
+              }}
+            >
+              Loan Files
+            </Button>
+          </Box>
+
           <Box
             flex={1}
             overflow="auto"
@@ -262,6 +302,55 @@ const LoanDetailsPage = () => {
           </Box>
         </Paper>
       </Box>
+
+      {/* File Dialog */}
+      <Dialog open={filesModalOpen} onClose={handleCloseFilesModal}>
+        <DialogTitle>Loan Files</DialogTitle>
+        <DialogContent>
+          {fileData?.length > 0 ? (
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>File Name</TableCell>
+                  <TableCell>Pages</TableCell>
+                  <TableCell>Uploader</TableCell>
+                  <TableCell>Action</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {fileData.map((file) => (
+                  <TableRow key={file.id}>
+                    <TableCell>{file.name}</TableCell>
+                    <TableCell>{file.pages}</TableCell>
+                    <TableCell>{file.uploader}</TableCell>
+                    <TableCell>
+                      <Button
+                        variant="outlined"
+                        color="primary"
+                        href={file.path}
+                        target="_blank"
+                        sx={{
+                          backgroundColor: "#003366",
+                          "&:hover": { backgroundColor: "#002244" },
+                        }}
+                      >
+                        Download File
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <Typography>No files available</Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseFilesModal} color="primary">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

@@ -18,7 +18,7 @@ const LoginPage = () => {
     isSuperAdmin: false,
   });
   const navigate = useNavigate();
-  const { data: meData, refetch } = useGetMeQuery();
+  const { data: meData } = useGetMeQuery();
   const {
     data: superAdminData,
     isSuccess: isSuperAdminSuccess,
@@ -36,8 +36,12 @@ const LoginPage = () => {
     { skip: isSuperAdmin || !username || !password }
   );
 
+  console.log(meData);
+
   const navigateUsersByRole = useCallback(() => {
-    if (!meData) refetch();
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
     switch (RoleEnum[meData?.role]) {
       case RoleEnum.REPUBLIC_EMPLOYEE:
       case RoleEnum.REPUBLIC_BOSS:
@@ -46,14 +50,13 @@ const LoginPage = () => {
       default:
         navigate("/loans");
     }
-  }, [meData, navigate, refetch]);
+  }, [meData, navigate]);
 
   useEffect(() => {
     const accessToken = getCookie("accessToken");
     const refreshToken = getCookie("refreshToken");
 
     if (accessToken && refreshToken) {
-      refetch();
       navigateUsersByRole();
     }
 
@@ -63,7 +66,7 @@ const LoginPage = () => {
     if (superAccessToken && superRefreshToken) {
       navigate("/superadmin-dashboard");
     }
-  }, [navigate, navigateUsersByRole, refetch]);
+  }, [navigate, navigateUsersByRole]);
 
   const handleLogin = () => {
     const { username, password, isSuperAdmin } = inputValues;
@@ -79,6 +82,11 @@ const LoginPage = () => {
         setCookie("super-accessToken", superAdminData.accessToken, 1);
         setCookie("super-refreshToken", superAdminData.refreshToken, 7);
         navigate("/superadmin-dashboard");
+        setInputValues({
+          username: null,
+          password: null,
+          isSuperAdmin: false,
+        });
       } else if (superAdminError) {
         setError(
           superAdminError?.data?.message || "Invalid username or password"
@@ -90,6 +98,11 @@ const LoginPage = () => {
         setCookie("accessToken", adminData.accessToken, 1);
         setCookie("refreshToken", adminData.refreshToken, 7);
         navigateUsersByRole();
+        setInputValues({
+          username: null,
+          password: null,
+          isSuperAdmin: false,
+        });
       } else if (adminError) {
         setError(adminError?.data?.message || "Invalid username or password");
         setShowSuperAdmin(true);
