@@ -214,7 +214,10 @@ const Loans = () => {
                   },
                   mr: 1,
                 }}
-                onClick={() => handleReportUpload}
+                onClick={() => {
+                  setReportUploadOpen(true);
+                  setSelectedLoanId(params.row?.id);
+                }}
               >
                 Qabul qilish
               </Button>
@@ -295,10 +298,6 @@ const Loans = () => {
     }
   };
 
-  const handleReportUpload = () => {
-    setReportUploadOpen(true);
-  };
-
   const handleFileSave = async () => {
     const fileInput = document.getElementById("file-upload");
     const file = fileInput.files[0];
@@ -344,6 +343,7 @@ const Loans = () => {
       });
     }
     approveLoan(selectedLoanId);
+    setFileName(null);
     setSelectedLoanId(null);
     handleUploadClose();
   };
@@ -516,36 +516,54 @@ const Loans = () => {
         <DialogContent
           sx={{ backgroundColor: "white", color: "#003366", padding: "2rem" }}
         >
-          <input
-            id="file-upload"
-            type="file"
-            accept="application/pdf"
-            onChange={handleFileChange}
-            style={{ display: "none" }}
-            InputLabelProps={{
-              style: { color: "#003366" },
-            }}
-          />
-          <Button
-            variant="outlined"
-            component="span"
-            sx={{
-              backgroundColor: "white",
-              borderColor: "#003366",
-              color: "#003366",
-              "&:hover": {
-                borderColor: "#002244",
-                color: "#002244",
-                backgroundColor: "white",
-              },
-              height: "56px",
-              margin: "5px 0",
-              textTransform: "none",
-              fontSize: "0.875rem",
-            }}
+          <label
+            htmlFor="file-upload"
+            style={{ display: "block", marginTop: "20px" }}
           >
-            Choose File
-          </Button>
+            <input
+              id="file-upload"
+              type="file"
+              accept="application/pdf"
+              onChange={handleFileChange}
+              style={{ display: "none" }}
+              InputLabelProps={{
+                style: { color: "#003366" },
+              }}
+            />
+            <Button
+              variant="outlined"
+              component="span"
+              sx={{
+                backgroundColor: "white",
+                borderColor: "#003366",
+                color: "#003366",
+                "&:hover": {
+                  borderColor: "#002244",
+                  color: "#002244",
+                  backgroundColor: "white",
+                },
+                height: "56px",
+                margin: "5px 0",
+                textTransform: "none",
+                fontSize: "0.875rem",
+              }}
+            >
+              Choose File
+            </Button>
+            {fileName && (
+              <Typography
+                // variant="body2"
+                sx={{
+                  color: "#003366",
+                  marginTop: "10px",
+                  justifyContent: "center",
+                  display: "flex",
+                }}
+              >
+                Selected file: {fileName}
+              </Typography>
+            )}
+          </label>
         </DialogContent>
         <DialogActions sx={{ backgroundColor: "white" }}>
           <Button onClick={handleUploadClose} sx={{ color: "#003366" }}>
@@ -603,7 +621,7 @@ const Loans = () => {
                         {file.pages}
                       </TableCell>
                       <TableCell sx={{ color: "#003366" }}>
-                        {file.file.admin.name}
+                        {file.admin.name}
                       </TableCell>
                       <TableCell>
                         <Button
