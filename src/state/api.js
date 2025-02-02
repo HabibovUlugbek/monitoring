@@ -178,9 +178,9 @@ export const api = createApi({
     }),
 
     uploadFile: build.mutation({
-      query: ({ loanId, formData, query }) => {
+      query: ({ loanId, formData, ...query }) => {
         return {
-          url: `loan/${loanId}/upload${createQueryString(query)}`,
+          url: `loan/${loanId}/upload?${createQueryString(query)}`,
           method: "POST",
           body: formData,
         };
@@ -193,6 +193,10 @@ export const api = createApi({
     }),
     getLoanFiles: build.query({
       query: (loanId) => `loan/${loanId}/files`,
+      providesTags: ["Loan"],
+    }),
+    downloadReport: build.query({
+      query: (loanId) => `loan/${loanId}/download`,
       providesTags: ["Loan"],
     }),
   }),
@@ -219,4 +223,5 @@ export const {
   useUploadFileMutation,
   useGetFileQuery,
   useGetLoanFilesQuery,
+  useDownloadReportQuery,
 } = api;

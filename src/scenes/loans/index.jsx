@@ -12,6 +12,12 @@ import {
   FormControl,
   InputLabel,
   Typography,
+  TextField,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import Header from "components/Header";
@@ -26,6 +32,7 @@ import {
   useApproveLoanMutation,
   useRejectLoanMutation,
   useUploadFileMutation,
+  useGetLoanFilesQuery,
 } from "state/api";
 import { getCookie } from "helper";
 
@@ -33,20 +40,29 @@ const Loans = () => {
   const theme = useTheme();
   const navigate = useNavigate();
 
+  const [selectedLoanId, setSelectedLoanId] = useState(null);
+
   const { data: loansData, isLoading } = useGetLoansQuery();
-  const { data: adminsData } = useGetAdminsQuery();
   const { data: meData, refetch } = useGetMeQuery();
   const [assignLoan] = useAssignLoanMutation();
   const [approveLoan] = useApproveLoanMutation();
   const [rejectLoan] = useRejectLoanMutation();
   const [uploadFile] = useUploadFileMutation();
+  const { data: fileData, refetch: refetchFiles } =
+    useGetLoanFilesQuery(selectedLoanId);
 
-  const [selectedLoanId, setSelectedLoanId] = useState(null);
+  const [selectedLoanBhmCode, setSelectedLoanBhmCode] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
+
+  const { data: adminsData } = useGetAdminsQuery(selectedLoanBhmCode);
 
   const [open, setOpen] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
-  const [selectedFileName, setSelectedFileName] = useState("");
+  const [reportUploadOpen, setReportUploadOpen] = useState(false);
+
+  const [fileName, setFileName] = useState("");
+  const [filePages, setFilePages] = useState("");
+  const [fileComment, setFileComment] = useState("");
 
   const formatDate = (date) => {
     const formattedDate = new Date(date).toLocaleDateString("en-GB", {
@@ -66,6 +82,7 @@ const Loans = () => {
     setOpen(false);
     setSelectedLoanId(null);
     setSelectedUser(null);
+    setSelectedLoanBhmCode();
   };
 
   const handleAssignUser = () => {
@@ -76,7 +93,7 @@ const Loans = () => {
   const handleUploadClose = () => {
     setUploadOpen(false);
     setSelectedLoanId(null);
-    setSelectedFileName("");
+    setReportUploadOpen(false);
   };
 
   const columns = [
@@ -134,6 +151,10 @@ const Loans = () => {
       flex: 0.5,
       renderCell: (params) => {
         const isResponsible = params.row?.history[0]?.assigneeId === meData?.id;
+        console.log(
+          RoleEnum.REGION_CHECKER_EMPLOYEE === RoleEnum[meData?.role] &&
+            isResponsible
+        );
         if (RoleEnum.REGION_BOSS === RoleEnum[meData?.role] && isResponsible) {
           return (
             <Button
@@ -145,7 +166,10 @@ const Loans = () => {
                   backgroundColor: "#002244",
                 },
               }}
-              onClick={() => handleOpen(params.row.id)}
+              onClick={() => {
+                setSelectedLoanBhmCode(params.row.bhmCode);
+                handleOpen(params.row.id);
+              }}
             >
               Bo'lib berish
             </Button>
@@ -175,11 +199,8 @@ const Loans = () => {
         } else if (RoleEnum.REPUBLIC_BOSS === RoleEnum[meData?.role]) {
           return "Sizda huquq yo'q";
         } else if (
-          [
-            RoleEnum.REPUBLIC_EMPLOYEE,
-            RoleEnum.REGION_CHECKER_EMPLOYEE,
-            RoleEnum.REGION_CHECKER_BOSS,
-          ].includes(RoleEnum[meData?.role] && isResponsible)
+          RoleEnum.REGION_CHECKER_EMPLOYEE === RoleEnum[meData?.role] &&
+          isResponsible
         ) {
           return (
             <>
@@ -193,7 +214,44 @@ const Loans = () => {
                   },
                   mr: 1,
                 }}
-                onClick={() => approveLoan({ loanId: params.row.id })}
+                onClick={() => handleReportUpload}
+              >
+                Qabul qilish
+              </Button>
+              <Button
+                variant="contained"
+                sx={{
+                  backgroundColor: "red",
+                  color: "white",
+                  "&:hover": {
+                    backgroundColor: "darkred",
+                  },
+                }}
+                onClick={() => rejectLoan({ loanId: params.row.id })}
+              >
+                Rad qilish
+              </Button>
+            </>
+          );
+        } else if (
+          [RoleEnum.REPUBLIC_EMPLOYEE, RoleEnum.REGION_CHECKER_BOSS].includes(
+            RoleEnum[meData?.role]
+          ) &&
+          isResponsible
+        ) {
+          return (
+            <>
+              <Button
+                variant="contained"
+                sx={{
+                  backgroundColor: "green",
+                  color: "white",
+                  "&:hover": {
+                    backgroundColor: "darkgreen",
+                  },
+                  mr: 1,
+                }}
+                onClick={() => setReportUploadOpen(true)}
               >
                 Qabul qilish
               </Button>
@@ -233,23 +291,61 @@ const Loans = () => {
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (file) {
-      setSelectedFileName(file.name);
+      setFileName(file.name);
     }
   };
 
-  const handleFileSave = () => {
+  const handleReportUpload = () => {
+    setReportUploadOpen(true);
+  };
+
+  const handleFileSave = async () => {
     const fileInput = document.getElementById("file-upload");
     const file = fileInput.files[0];
     if (file) {
       const formData = new FormData();
       formData.append("file", file, file.name);
 
-      uploadFile({ loanId: selectedLoanId, formData });
+      try {
+        await uploadFile({
+          loanId: selectedLoanId,
+          formData,
+          name: fileName,
+          pages: filePages,
+          comment: fileComment,
+        });
 
-      setSelectedLoanId(null);
-
-      handleUploadClose();
+        refetchFiles();
+      } catch (error) {
+        console.error("File upload failed:", error);
+      }
     }
+  };
+
+  const handleFilesApprove = () => {
+    approveLoan(selectedLoanId);
+    setSelectedLoanId(null);
+    handleUploadClose();
+  };
+
+  const handleReportApprove = async () => {
+    const fileInput = document.getElementById("file-upload");
+    const file = fileInput.files[0];
+    if (file) {
+      const formData = new FormData();
+      formData.append("file", file, file.name);
+
+      await uploadFile({
+        loanId: selectedLoanId,
+        formData,
+        name: fileName,
+        pages: filePages,
+        comment: fileComment,
+      });
+    }
+    approveLoan(selectedLoanId);
+    setSelectedLoanId(null);
+    handleUploadClose();
   };
 
   return (
@@ -266,7 +362,7 @@ const Loans = () => {
             border: "none",
           },
           "& .MuiDataGrid-cell": {
-            color: theme.palette.secondary[100],
+            color: "#003366",
           },
           "& .MuiDataGrid-columnHeaders": {
             backgroundColor: theme.palette.background.alt,
@@ -303,10 +399,10 @@ const Loans = () => {
             color: "#003366", // Footer pagination text color
           },
           "& .MuiDataGrid-footerContainer .MuiTablePagination-rootContainer": {
-            color: theme.palette.secondary[100],
+            color: "#003366",
           },
           "& .MuiDataGrid-toolbarContainer .MuiButton-text": {
-            color: theme.palette.secondary[100] + " !important",
+            color: "#003366 !important",
           },
         }}
       >
@@ -367,11 +463,14 @@ const Loans = () => {
                 {adminsData?.length ? "Select user" : "No admins to select"}
               </MenuItem>
               {adminsData?.length ? (
-                adminsData?.map((admin) => (
-                  <MenuItem key={admin.id} value={admin.id}>
-                    {admin.name}
-                  </MenuItem>
-                ))
+                adminsData?.map(
+                  (admin) =>
+                    admin?.bhmCode === selectedLoanBhmCode && (
+                      <MenuItem key={admin.id} value={admin.id}>
+                        {admin.name}
+                      </MenuItem>
+                    )
+                )
               ) : (
                 <></>
               )}
@@ -406,58 +505,231 @@ const Loans = () => {
       </Dialog>
 
       <Dialog
+        open={reportUploadOpen}
+        onClose={handleUploadClose}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle sx={{ backgroundColor: "white", color: "#003366" }}>
+          {`Upload Files for Loan ${selectedLoanId}`}
+        </DialogTitle>
+        <DialogContent
+          sx={{ backgroundColor: "white", color: "#003366", padding: "2rem" }}
+        >
+          <input
+            id="file-upload"
+            type="file"
+            accept="application/pdf"
+            onChange={handleFileChange}
+            style={{ display: "none" }}
+            InputLabelProps={{
+              style: { color: "#003366" },
+            }}
+          />
+          <Button
+            variant="outlined"
+            component="span"
+            sx={{
+              backgroundColor: "white",
+              borderColor: "#003366",
+              color: "#003366",
+              "&:hover": {
+                borderColor: "#002244",
+                color: "#002244",
+                backgroundColor: "white",
+              },
+              height: "56px",
+              margin: "5px 0",
+              textTransform: "none",
+              fontSize: "0.875rem",
+            }}
+          >
+            Choose File
+          </Button>
+        </DialogContent>
+        <DialogActions sx={{ backgroundColor: "white" }}>
+          <Button onClick={handleUploadClose} sx={{ color: "#003366" }}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleReportApprove}
+            variant="contained"
+            sx={{
+              backgroundColor: "#003366",
+              color: "white",
+              "&:hover": { backgroundColor: "#002244" },
+            }}
+          >
+            Approve
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
         open={uploadOpen}
         onClose={handleUploadClose}
         maxWidth="sm"
         fullWidth
       >
         <DialogTitle sx={{ backgroundColor: "white", color: "#003366" }}>
-          {`Upload File for Loan ${selectedLoanId}`}
+          {`Upload Files for Loan ${selectedLoanId}`}
         </DialogTitle>
         <DialogContent
           sx={{ backgroundColor: "white", color: "#003366", padding: "2rem" }}
         >
+          <>
+            {fileData?.length > 0 ? (
+              <Table
+                sx={{
+                  backgroundColor: "white",
+                  color: "#003366",
+                }}
+              >
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ color: "#003366" }}>File Name</TableCell>
+                    <TableCell sx={{ color: "#003366" }}>Pages</TableCell>
+                    <TableCell sx={{ color: "#003366" }}>Uploader</TableCell>
+                    <TableCell sx={{ color: "#003366" }}>Action</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {fileData.map((file) => (
+                    <TableRow key={file.id}>
+                      <TableCell sx={{ color: "#003366" }}>
+                        {file.name}
+                      </TableCell>
+                      <TableCell sx={{ color: "#003366" }}>
+                        {file.pages}
+                      </TableCell>
+                      <TableCell sx={{ color: "#003366" }}>
+                        {file.file.admin.name}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="outlined"
+                          color="primary"
+                          href={file.path}
+                          target="_blank"
+                          sx={{
+                            backgroundColor: "#003366",
+                            "&:hover": { backgroundColor: "#002244" },
+                          }}
+                        >
+                          Download File
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <></>
+            )}
+          </>
+
+          <Typography
+            variant="h6"
+            sx={{
+              color: "#003366",
+              marginTop: "1rem",
+              justifyContent: "center",
+              display: "flex",
+            }}
+          >
+            Adding New File
+          </Typography>
           <label
             htmlFor="file-upload"
             style={{ display: "block", marginTop: "20px" }}
           >
-            <input
-              id="file-upload"
-              type="file"
-              accept="application/pdf"
-              onChange={handleFileChange}
-              style={{ display: "none" }}
-            />
-            <Button
-              variant="outlined"
-              component="span"
-              sx={{
-                backgroundColor: "white",
-                borderColor: "#003366",
-                color: "#003366",
-                "&:hover": {
-                  borderColor: "#002244",
-                  color: "#002244",
+            <Box display={"flex"} alignItems={"center"} mt={2}>
+              <TextField
+                fullWidth
+                margin="dense"
+                label="Name"
+                value={fileName}
+                onChange={(e) => setFileName(e.target.value)}
+                sx={{
+                  "& .MuiInputLabel-root": { color: "#003366" },
+                  "& .MuiInputBase-root": { color: "#003366" },
+                }}
+                InputLabelProps={{
+                  style: { color: "#003366" },
+                }}
+                InputProps={{
+                  style: { color: "#003366", border: "1px solid #003366" },
+                }}
+              />
+              <input
+                id="file-upload"
+                type="file"
+                accept="application/pdf"
+                onChange={handleFileChange}
+                style={{ display: "none" }}
+                InputLabelProps={{
+                  style: { color: "#003366" },
+                }}
+              />
+              <Button
+                variant="outlined"
+                component="span"
+                sx={{
                   backgroundColor: "white",
-                },
-                padding: "10px 20px",
-                textTransform: "none",
-                fontSize: "0.875rem",
-              }}
-            >
-              Choose File
-            </Button>
+                  borderColor: "#003366",
+                  color: "#003366",
+                  "&:hover": {
+                    borderColor: "#002244",
+                    color: "#002244",
+                    backgroundColor: "white",
+                  },
+                  height: "56px",
+                  margin: "5px 0",
+                  textTransform: "none",
+                  fontSize: "0.875rem",
+                }}
+              >
+                Choose File
+              </Button>
+            </Box>
           </label>
-          {selectedFileName && (
-            <Typography sx={{ marginTop: "10px", color: "#003366" }}>
-              Selected File: {selectedFileName}
-            </Typography>
-          )}
-        </DialogContent>
-        <DialogActions sx={{ backgroundColor: "white" }}>
-          <Button onClick={handleUploadClose} sx={{ color: "#003366" }}>
-            Cancel
-          </Button>
+          <TextField
+            fullWidth
+            margin="dense"
+            label="Pages"
+            type="number"
+            value={filePages}
+            onChange={(e) => setFilePages(e.target.value)}
+            sx={{
+              "& .MuiInputLabel-root": { color: "#003366" },
+              "& .MuiInputBase-root": { color: "#003366" },
+            }}
+            InputLabelProps={{
+              style: { color: "#003366" },
+            }}
+            InputProps={{
+              style: { color: "#003366", border: "1px solid #003366" },
+            }}
+          />
+          <TextField
+            fullWidth
+            margin="dense"
+            label="Comment"
+            multiline
+            rows={4}
+            value={fileComment}
+            onChange={(e) => setFileComment(e.target.value)}
+            sx={{
+              "& .MuiInputLabel-root": { color: "#003366" },
+              "& .MuiInputBase-root": { color: "#003366" },
+            }}
+            InputLabelProps={{
+              style: { color: "#003366" },
+            }}
+            InputProps={{
+              style: { color: "#003366", border: "1px solid #003366" },
+            }}
+          />
           <Button
             onClick={handleFileSave}
             variant="contained"
@@ -467,7 +739,23 @@ const Loans = () => {
               "&:hover": { backgroundColor: "#002244" },
             }}
           >
-            Save
+            Save Details
+          </Button>
+        </DialogContent>
+        <DialogActions sx={{ backgroundColor: "white" }}>
+          <Button onClick={handleUploadClose} sx={{ color: "#003366" }}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleFilesApprove}
+            variant="contained"
+            sx={{
+              backgroundColor: "#003366",
+              color: "white",
+              "&:hover": { backgroundColor: "#002244" },
+            }}
+          >
+            Approve
           </Button>
         </DialogActions>
       </Dialog>

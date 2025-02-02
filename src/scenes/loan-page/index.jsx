@@ -25,6 +25,7 @@ import {
   useGetMeQuery,
   useSendMessageMutation,
   useGetLoanFilesQuery,
+  useDownloadReportQuery,
 } from "state/api";
 import { regions } from "constants";
 
@@ -36,6 +37,8 @@ const LoanDetailsPage = () => {
   const { data, error, isLoading, refetch } = useGetLoanQuery(loanId);
   const { data: meData } = useGetMeQuery();
   const { data: fileData } = useGetLoanFilesQuery(loanId);
+  const { data: reportData } = useDownloadReportQuery(loanId);
+
   const [sendMessage] = useSendMessageMutation();
 
   const [newMessage, setNewMessage] = useState("");
@@ -63,6 +66,10 @@ const LoanDetailsPage = () => {
 
   const handleCloseFilesModal = () => {
     setFilesModalOpen(false);
+  };
+
+  const handleSeeReport = async () => {
+    console.log(reportData);
   };
 
   return (
@@ -322,7 +329,7 @@ const LoanDetailsPage = () => {
                   <TableRow key={file.id}>
                     <TableCell>{file.name}</TableCell>
                     <TableCell>{file.pages}</TableCell>
-                    <TableCell>{file.uploader}</TableCell>
+                    <TableCell>{file.admin.name}</TableCell>
                     <TableCell>
                       <Button
                         variant="outlined"
@@ -346,6 +353,18 @@ const LoanDetailsPage = () => {
           )}
         </DialogContent>
         <DialogActions>
+          <Button
+            variant="outlined"
+            color="primary"
+            onClick={handleSeeReport}
+            href={`http://localhost:4000/files/report-${loanId}.pdf`}
+            sx={{
+              backgroundColor: "#003366",
+              "&:hover": { backgroundColor: "#002244" },
+            }}
+          >
+            See report
+          </Button>
           <Button onClick={handleCloseFilesModal} color="primary">
             Close
           </Button>
