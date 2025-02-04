@@ -334,7 +334,7 @@ const LoanDetailsPage = () => {
                       <Button
                         variant="outlined"
                         color="primary"
-                        href={file.path}
+                        href={`${process.env.REACT_APP_BASE_URL}/${file.path}`}
                         target="_blank"
                         sx={{
                           backgroundColor: "#003366",
@@ -357,7 +357,7 @@ const LoanDetailsPage = () => {
             variant="outlined"
             color="primary"
             onClick={handleSeeReport}
-            href={`http://localhost:4000/files/report-${loanId}.pdf`}
+            href={`${process.env.REACT_APP_BASE_URL}/files/report-${loanId}.pdf`}
             sx={{
               backgroundColor: "#003366",
               "&:hover": { backgroundColor: "#002244" },

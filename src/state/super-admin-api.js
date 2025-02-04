@@ -31,7 +31,7 @@ const handle401Error = async (args, api, extraOptions, baseQuery) => {
 
 const baseQueryWithReauth = async (args, api, extraOptions) => {
   const baseQuery = fetchBaseQuery({
-    baseUrl: process.env.REACT_APP_BASE_URL,
+    baseUrl: `${process.env.REACT_APP_BASE_URL}/api/v1`,
     prepareHeaders: (headers) => {
       const accessToken = getAccessTokenFromCookie();
       if (accessToken) {

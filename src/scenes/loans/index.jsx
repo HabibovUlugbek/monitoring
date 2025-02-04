@@ -230,7 +230,7 @@ const Loans = () => {
                     backgroundColor: "darkred",
                   },
                 }}
-                onClick={() => rejectLoan({ loanId: params.row.id })}
+                onClick={() => rejectLoan(params.row.id)}
               >
                 Rad qilish
               </Button>
@@ -267,7 +267,7 @@ const Loans = () => {
                     backgroundColor: "darkred",
                   },
                 }}
-                onClick={() => rejectLoan({ loanId: params.row.id })}
+                onClick={() => rejectLoan(params.row.id)}
               >
                 Rad qilish
               </Button>
