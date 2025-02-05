@@ -627,7 +627,7 @@ const Loans = () => {
                         <Button
                           variant="outlined"
                           color="primary"
-                          href={file.path}
+                          href={`${process.env.REACT_APP_BASE_URL}${file.path}`}
                           target="_blank"
                           sx={{
                             backgroundColor: "#003366",

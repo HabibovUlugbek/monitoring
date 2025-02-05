@@ -225,7 +225,9 @@ const LoanDetailsPage = () => {
                             <Button
                               variant="outlined"
                               color="primary"
-                              href={msg.message.split("File uploaded: ")[1]}
+                              href={`${process.env.REACT_APP_BASE_URL}${
+                                msg.message.split("File uploaded: ")[1]
+                              }`}
                               target="_blank"
                               sx={{
                                 backgroundColor: "#003366",
@@ -334,7 +336,7 @@ const LoanDetailsPage = () => {
                       <Button
                         variant="outlined"
                         color="primary"
-                        href={`${process.env.REACT_APP_BASE_URL}/${file.path}`}
+                        href={`${process.env.REACT_APP_BASE_URL}${file.path}`}
                         target="_blank"
                         sx={{
                           backgroundColor: "#003366",
