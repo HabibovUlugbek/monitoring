@@ -151,10 +151,7 @@ const Loans = () => {
       flex: 0.5,
       renderCell: (params) => {
         const isResponsible = params.row?.history[0]?.assigneeId === meData?.id;
-        console.log(
-          RoleEnum.REGION_CHECKER_EMPLOYEE === RoleEnum[meData?.role] &&
-            isResponsible
-        );
+
         if (RoleEnum.REGION_BOSS === RoleEnum[meData?.role] && isResponsible) {
           return (
             <Button
@@ -254,7 +251,7 @@ const Loans = () => {
                   },
                   mr: 1,
                 }}
-                onClick={() => setReportUploadOpen(true)}
+                onClick={() => approveLoan(params.row.id)}
               >
                 Qabul qilish
               </Button>
